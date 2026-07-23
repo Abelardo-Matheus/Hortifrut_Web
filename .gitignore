@@ -1,0 +1,12 @@
+# Arquivos de ambiente virtual
+venv/
+env/
+.env
+
+# Arquivos temporários e de cache do Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Arquivos do Streamlit
+.streamlit/secrets.toml
