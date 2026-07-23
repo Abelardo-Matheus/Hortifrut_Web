@@ -43,7 +43,6 @@ if "light_mode" not in st.session_state:
 
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
-    st.markdown('<div id="btn-anchor" style="position:absolute; width:0; height:0; visibility:hidden;"></div>', unsafe_allow_html=True)
     if st.session_state.logged_in:
         if st.button("🔓", help="Sair do Modo Admin"):
             st.session_state.logged_in = False
@@ -60,6 +59,17 @@ with col_btn2:
     if st.button(tema_icon, help="Mudar Tema"):
         st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
+
+import streamlit.components.v1 as components
+components.html("""
+<script>
+    const btns = window.parent.document.querySelectorAll('.stButton');
+    if (btns.length >= 2) {
+        btns[0].classList.add('btn-canto-esquerdo');
+        btns[1].classList.add('btn-canto-direito');
+    }
+</script>
+""", height=0)
 
 def load_css(file_name):
     import os
