@@ -17,46 +17,76 @@
     perspective: none !important;
 }
 
-/* Zerar altura do container original dos botões (agrupados em st.columns) para não dar espaçamento vazio */
+/* =====================================================
+   BOTÕES FLUTUANTES (Admin + Tema) — FIXOS NA TELA
+   Ficam visíveis em qualquer posição do scroll.
+   Mesmo tamanho, mesma margem, um em cada lado.
+   ===================================================== */
+
+/* Zera o container dos botões para não gerar espaço em branco */
 [data-testid="stHorizontalBlock"]:first-of-type {
     height: 0px !important;
     min-height: 0px !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
 }
 
-/* Flutuar os botões sobre o vídeo e fixar diretamente nos cantos */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) [data-testid="stBaseButton-secondary"],
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) .stButton {
+/* BOTÃO ESQUERDO — Ícone Admin (🔐 / 🔓) */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button,
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) .stButton > button {
     position: fixed !important;
-    top: 15px !important;
-    left: 15px !important;
-    width: fit-content !important;
+    top: 12px !important;
+    left: 12px !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
     z-index: 999999 !important;
     margin: 0 !important;
+    border-radius: 8px !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
 }
 
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) [data-testid="stBaseButton-secondary"],
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) .stButton {
+/* BOTÃO DIREITO — Ícone Tema (☀️ / 🌙) */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button,
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) .stButton > button {
     position: fixed !important;
-    top: 15px !important;
-    right: 15px !important;
-    width: fit-content !important;
+    top: 12px !important;
+    right: 12px !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
     z-index: 999999 !important;
     margin: 0 !important;
+    border-radius: 8px !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
 }
 
-/* Responsividade para telas menores (celulares) */
+/* Responsividade para celulares */
 @media (max-width: 768px) {
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) [data-testid="stBaseButton-secondary"],
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) .stButton {
-        left: 10px !important;
-        top: 10px !important;
+    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button,
+    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) .stButton > button {
+        top: 8px !important;
+        left: 8px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
     }
 
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) [data-testid="stBaseButton-secondary"],
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) .stButton {
-        right: 10px !important;
-        top: 10px !important;
+    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button,
+    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) .stButton > button {
+        top: 8px !important;
+        right: 8px !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
     }
 }

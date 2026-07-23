@@ -1,26 +1,36 @@
 /* ===== CABEÇALHO: VÍDEO LOGO ===== */
-/* O container se adapta exatamente ao tamanho do vídeo */
+/* Container com metade da altura original (~180px) */
 .video-container {
     width: 100%;
-    line-height: 0;          /* remove espaço fantasma abaixo do vídeo */
+    max-height: 180px;
+    line-height: 0;
     overflow: hidden;
+    display: block;
 }
 
-/* O vídeo sempre estica 100% da largura; a altura é proporcional ao vídeo */
+/* Vídeo ocupa 100% da largura; altura proporcional mas limitada pelo container */
 .logo-video {
     width: 100%;
     height: auto;
     display: block;
     object-fit: cover;
+    max-height: 180px;
 }
 
-/* ===== LAYOUT GERAL ===== */
-/* Expandir a tela mantendo-a centralizada e sem encostar no scroll */
+/* ===== LAYOUT GERAL =====
+/* Expandir a tela sem padding no topo */
 .block-container {
     padding-top: 0 !important;
+    margin-top: 0 !important;
     padding-left: 2rem !important;
     padding-right: 2rem !important;
     max-width: 100% !important;
+}
+
+/* Zera qualquer espaço do app container do Streamlit */
+[data-testid="stAppViewContainer"] > section:first-child {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 /* Responsividade para Celulares */
