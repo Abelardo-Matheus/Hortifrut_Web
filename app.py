@@ -18,6 +18,9 @@ controller = CookieController()
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
+if "show_admin" not in st.session_state:
+    st.session_state.show_admin = False
+
 if not st.session_state.logged_in:
     auth = controller.get("auth_token")
     if auth == "hortifrut_admin_ok":
@@ -31,6 +34,7 @@ def modal_login():
         if st.form_submit_button("Entrar", type="primary", use_container_width=True):
             if usuario == "joel" and senha == "531735":
                 st.session_state.logged_in = True
+                st.session_state.show_admin = True
                 controller.set("auth_token", "hortifrut_admin_ok", max_age=31536000)
                 import time
                 time.sleep(0.5)
@@ -607,8 +611,10 @@ def render_admin():
 # ==========================================
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
+if 'show_admin' not in st.session_state:
+    st.session_state.show_admin = False
 
-if st.session_state.logged_in:
+if st.session_state.show_admin:
     render_admin()
 else:
     # ==========================================
@@ -728,15 +734,21 @@ else:
 with st.container():
     st.markdown("<div id='hf-hidden-btns-marker' style='display:none'></div>", unsafe_allow_html=True)
     
-    if st.session_state.logged_in:
+    if st.session_state.show_admin:
         if st.button("🔓", key="st_btn_admin"):
             st.session_state.logged_in = False
+            st.session_state.show_admin = False
             controller.remove("auth_token")
             import time; time.sleep(0.3)
             st.rerun()
     else:
-        if st.button("🔐", key="st_btn_admin"):
-            modal_login()
+        icon = "⚙️" if st.session_state.logged_in else "🔐"
+        if st.button(icon, key="st_btn_admin"):
+            if st.session_state.logged_in:
+                st.session_state.show_admin = True
+                st.rerun()
+            else:
+                modal_login()
 
     _tema_icon = "🌙" if st.session_state.light_mode else "☀️"
     if st.button(_tema_icon, key="st_btn_tema"):
@@ -746,7 +758,10 @@ with st.container():
 # ── Portal visual — box fixa superior ───────────────────────────────
 import streamlit.components.v1 as _components
 
-_admin_icon   = "🔓" if st.session_state.logged_in else "🔐"
+if st.session_state.show_admin:
+    _admin_icon = "🔓"
+else:
+    _admin_icon = "⚙️" if st.session_state.logged_in else "🔐"
 _tema_icon_js = "🌙" if st.session_state.light_mode else "☀️"
 
 _components.html(f"""
