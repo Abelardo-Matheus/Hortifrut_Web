@@ -62,7 +62,7 @@ def render_admin():
                                 # Textos nativos do Streamlit (adaptam automaticamente para Claro/Escuro sem sumir)
                                 # Usa altura fixa de 45px e corta com "..." se passar de 2 linhas
                                 nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-                            st.markdown(f'<div style=\"height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px;\">{nome_curto}</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px;">{nome_curto}</div>', unsafe_allow_html=True)
                                 st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px;"><b>R$ {p["preco_venda"]:.2f}</b> / {p["unidade_medida"]}</div>', unsafe_allow_html=True)
                                 st.caption(f"Estoque: {p['quantidade_estoque']}")
                                 
