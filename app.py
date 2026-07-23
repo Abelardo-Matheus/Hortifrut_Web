@@ -803,6 +803,30 @@ _components.html(f"""
 
     doc.getElementById('hf-btn-admin').onclick = function() {{ clickSt(0); }};
     doc.getElementById('hf-btn-tema').onclick  = function() {{ clickSt(1); }};
+    
+    // 5. Lógica de estado do Vídeo Logo (Tocar só uma vez)
+    var logoVid = doc.querySelector('.logo-video');
+    if (logoVid) {
+        if (sessionStorage.getItem('hf_video_played')) {
+            // Se já tocou nessa sessão, pausa e pula pro final
+            logoVid.removeAttribute('autoplay');
+            logoVid.pause();
+            
+            // Espera o metadado carregar pra ter certeza da duração e ir pro último frame
+            if (logoVid.readyState >= 1) {
+                logoVid.currentTime = logoVid.duration || 999;
+            } else {
+                logoVid.addEventListener('loadedmetadata', function() {
+                    logoVid.currentTime = logoVid.duration || 999;
+                });
+            }
+        } else {
+            // Marca como tocado quando terminar
+            logoVid.addEventListener('ended', function() {
+                sessionStorage.setItem('hf_video_played', 'true');
+            });
+        }
+    }
 }})();
 </script>
 """, height=0, width=0)
