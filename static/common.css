@@ -32,13 +32,7 @@
     isolation: auto;
 }
 
-/* =================================================================
-   ESCONDE os botões Streamlit originais (são ocultos mas funcionais)
-   O clique é disparado via JS pelo portal abaixo.
-   ================================================================= */
-[data-testid="stHorizontalBlock"]:first-of-type {
-    display: none !important;
-}
+
 
 /* =================================================================
    PORTAL — Box de botões fixo no topo da viewport
