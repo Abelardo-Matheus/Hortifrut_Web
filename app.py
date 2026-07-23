@@ -70,15 +70,42 @@ if st.session_state.light_mode:
         .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
             background-color: #000000 !important;
         }
-        img, video, iframe { 
+        img, iframe { 
             filter: invert(1) hue-rotate(180deg); 
             border-radius: 10px;
+        }
+        .video-container {
+            filter: invert(1) hue-rotate(180deg); 
+            background-color: #0e1117;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .logo-video {
+            mix-blend-mode: screen;
+            width: 100%;
+            max-width: 500px;
         }
     '''
 else:
     css_theme = '''
-        img, video, iframe { 
+        img, iframe { 
             border-radius: 10px;
+        }
+        .video-container {
+            background-color: #0e1117;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .logo-video {
+            mix-blend-mode: screen;
+            width: 100%;
+            max-width: 500px;
         }
     '''
 
@@ -640,8 +667,14 @@ else:
     # ==========================================
     # VITRINE PÚBLICA (CLIENTES)
     # ==========================================
-    st.markdown("<h1 style='text-align: center; color: #27ae60; font-size: 50px; margin-bottom: 0;'>Hortifruti J & M 🍎</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; font-size: 20px; color: #7f8c8d;'>Seja muito bem-vindo! Confira nossos produtos fresquinhos:</p>", unsafe_allow_html=True)
+    
+    video_html = """
+    <div class="video-container">
+        <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo.mp4" autoplay muted playsinline></video>
+    </div>
+    """
+    st.markdown(video_html, unsafe_allow_html=True)
+    
     st.markdown("---")
     
     produtos = db.get_produtos()
