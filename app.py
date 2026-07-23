@@ -42,7 +42,7 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-col_btn1, col_btn2, _ = st.columns([1, 1, 15])
+col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
     st.markdown('<div id="btn-anchor" style="display:none;"></div>', unsafe_allow_html=True)
     if st.session_state.logged_in:
@@ -90,7 +90,7 @@ if st.session_state.light_mode:
             mix-blend-mode: screen;
             width: 100vw;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
         }
     '''
 else:
@@ -113,7 +113,7 @@ else:
             mix-blend-mode: screen;
             width: 100vw;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
         }
     '''
 
@@ -127,8 +127,7 @@ css_theme += '''
             top: 15px;
             left: 15px;
             z-index: 999;
-            width: auto !important;
-            min-width: 150px;
+            width: 120px !important;
         }
 '''
 
