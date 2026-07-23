@@ -42,6 +42,7 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
+st.markdown("<div style='margin-top: 75px;'></div>", unsafe_allow_html=True)
 col_btn1, col_btn2, _ = st.columns([1, 1, 15])
 with col_btn1:
     if st.session_state.logged_in:
