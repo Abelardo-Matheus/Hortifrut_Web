@@ -12,14 +12,15 @@ img, iframe {
     filter: invert(1) hue-rotate(180deg); 
     background-color: #0e1117;
     width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    margin-top: -80px;
-    margin-bottom: 5px;
-    height: 350px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 330px;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    z-index: 10;
 }
 .logo-video {
     mix-blend-mode: screen;
