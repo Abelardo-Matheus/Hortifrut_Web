@@ -306,12 +306,42 @@ def render_admin():
                                         e_venda = colB.number_input("Venda", value=float(p['preco_venda']), step=0.1)
                                         
                                         e_estoque = st.number_input("Estoque", value=float(p['quantidade_estoque']), step=1.0)
+                                        e_img = st.file_uploader("Trocar Foto (Opcional)", type=["png", "jpg", "jpeg"], key=f"img_edit_{p['id']}")
                                         
                                         if st.form_submit_button("💾 Salvar Alterações", type="primary", use_container_width=True):
                                             if db.atualizar_produto(p['id'], e_nome, e_cod, e_cat, e_custo, e_venda, e_estoque, p.get('data_compra', ''), e_medida):
-                                                st.success("Salvo!")
-                                                import time; time.sleep(0.5); st.rerun()
+                                                if e_img:
+                                                    img_bytes = e_img.read()
+                                                    import threading
+                                                    def process_edit_upload(i_bytes, fname, p_id):
+                                                        try:
+                                                            import io, urllib.parse
+                                                            from PIL import Image
+                                                            from rembg import remove
+                                                            from database import supabase
+                                                            safe_name = urllib.parse.quote(fname)
+                                                            supabase.storage.from_("produtos").upload(path=safe_name, file=i_bytes, file_options={"content-type": "image/jpeg"})
+                                                            url_orig = supabase.storage.from_("produtos").get_public_url(safe_name)
+                                                            supabase.table("produtos").update({"imagem_url": url_orig}).eq("id", p_id).execute()
+                                                            
+                                                            img = Image.open(io.BytesIO(i_bytes))
+                                                            img_nobg = remove(img)
+                                                            out_bytes = io.BytesIO()
+                                                            img_nobg.save(out_bytes, format='PNG')
+                                                            out_bytes.seek(0)
+                                                            new_name = safe_name.split('.')[0] + "_nobg.png"
+                                                            try: supabase.storage.from_("produtos").remove([new_name])
+                                                            except: pass
+                                                            supabase.storage.from_("produtos").upload(path=new_name, file=out_bytes.read(), file_options={"content-type": "image/png"})
+                                                            url_nobg = supabase.storage.from_("produtos").get_public_url(new_name)
+                                                            supabase.table("produtos").update({"imagem_url": url_nobg}).eq("id", p_id).execute()
+                                                        except Exception as e:
+                                                            print("Erro update bg:", e)
+                                                    t = threading.Thread(target=process_edit_upload, args=(img_bytes, e_img.name, p['id']))
+                                                    t.start()
                                                 
+                                                st.success("Salvo!")
+                                                import time; time.sleep(0.2); st.rerun()
                                     if st.button("🗑️ Excluir Produto", key=f"del_{p['id']}", use_container_width=True):
                                         if db.excluir_produto(p['id']):
                                             st.rerun()
