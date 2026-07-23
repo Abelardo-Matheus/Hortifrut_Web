@@ -11,6 +11,20 @@ st.set_page_config(
 
 import database as db
 
+from streamlit_cookies_controller import CookieController
+controller = CookieController()
+
+# Verifica o cookie de login
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    auth = controller.get("auth_token")
+    if auth == "hortifrut_admin_ok":
+        st.session_state.logged_in = True
+        # Re-executa para aplicar o estado
+        # st.rerun() # Não obrigatório, o layout reage a session_state
+
 
 def render_admin():
     
@@ -562,11 +576,11 @@ else:
     # CSS para as imagens da vitrine
     st.markdown('''
     <style>
-    /* Expandir a tela ao máximo possível com margem direita de 10px */
+    /* Expandir a tela mantendo-a centralizada e sem encostar no scroll */
     .block-container {
         padding-top: 2rem !important;
-        padding-left: 1rem !important;
-        padding-right: 10px !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
         max-width: 100% !important;
     }
     
