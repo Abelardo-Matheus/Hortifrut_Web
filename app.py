@@ -625,6 +625,44 @@ else:
         box-sizing: border-box;
         background-color: transparent;
     }
+    .vitrine-img-container {
+        display: flex; justify-content: center; height: 120px; align-items: center; margin-bottom: 10px;
+    }
+    .sem-imagem {
+        color: #ccc;
+    }
+    .vitrine-nome {
+        height: 48px; overflow: hidden; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-bottom: 5px; text-align: center;
+    }
+    .vitrine-preco {
+        display: flex; justify-content: center; align-items: center; font-size: 20px; margin-bottom: 5px; color: #27ae60; text-align: center;
+    }
+    .vitrine-preco span {
+        font-size:14px; color:#7f8c8d; margin-left: 5px;
+    }
+    .vitrine-estoque {
+        text-align: center; font-weight: bold; font-size: 14px;
+    }
+    .disp { color: #2980b9; }
+    .esgot { color: #e74c3c; }
+    
+    @media (max-width: 768px) {
+        .vitrine-grid {
+            /* Força 3 colunas em telas pequenas, independente de quão pequenas sejam */
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 5px;
+        }
+        .vitrine-card {
+            padding: 0.3rem !important;
+            border-width: 2px !important;
+        }
+        .blend-img { max-height: 80px; }
+        .vitrine-img-container { height: 80px; margin-bottom: 5px; }
+        .vitrine-nome { font-size: 13px !important; height: 34px !important; line-height: 1.2; }
+        .vitrine-preco { font-size: 14px !important; }
+        .vitrine-preco span { font-size: 11px !important; margin-left: 2px; }
+        .vitrine-estoque { font-size: 11px !important; }
+    }
     </style>
     ''', unsafe_allow_html=True)
     
@@ -666,29 +704,40 @@ else:
     st.write("")
     st.markdown("---")
     
-    cols_per_row = 6
-    for i in range(0, len(prods_vitrine), cols_per_row):
-        cols = st.columns(cols_per_row)
-        for j in range(cols_per_row):
-            if i + j < len(prods_vitrine):
-                p = prods_vitrine[i+j]
-                with cols[j]:
-                    with st.container(border=True):
-                        # Imagem com o blend mode (fundo branco fica transparente)
-                        if p.get("imagem_url"):
-                            st.markdown(f'<div style="display: flex; justify-content: center; height: 120px; align-items: center; margin-bottom: 10px;"><img class="blend-img" src="{p["imagem_url"]}"></div>', unsafe_allow_html=True)
-                        else:
-                            st.markdown('<div style="height: 120px; display: flex; justify-content: center; align-items: center; color: #ccc; margin-bottom: 10px;">Sem Imagem</div>', unsafe_allow_html=True)
-                            
-                        # Nome do Produto
-                        nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-                        st.markdown(f'<div style=\"height: 48px; overflow: hidden; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-bottom: 5px; text-align: center;\">{nome_curto}</div>', unsafe_allow_html=True)
-                        
-                        # Preço
-                        st.markdown(f'<div style="display: flex; justify-content: center; align-items: center; font-size: 20px; margin-bottom: 5px; color: #27ae60; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b> <span style="font-size:14px; color:#7f8c8d; margin-left: 5px;">/ {p["unidade_medida"]}</span></div>', unsafe_allow_html=True)
-                        
-                        # Estoque/Disponibilidade
-                        if p['quantidade_estoque'] > 0 or p['categoria'] == 'Horta (Ilimitado)':
-                            st.markdown(f"<div style='text-align: center; color: #2980b9; font-weight: bold; font-size: 14px;'>✓ Disponível</div>", unsafe_allow_html=True)
-                        else:
-                            st.markdown("<div style='text-align: center; color: #e74c3c; font-weight: bold; font-size: 14px;'>✗ Esgotado</div>", unsafe_allow_html=True)
+    html_cards = []
+    for p in prods_vitrine:
+        # Imagem
+        if p.get("imagem_url"):
+            img_html = f'<div class="vitrine-img-container"><img class="blend-img" src="{p["imagem_url"]}"></div>'
+        else:
+            img_html = '<div class="vitrine-img-container sem-imagem">Sem Imagem</div>'
+            
+        # Nome do Produto
+        nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
+        nome_html = f'<div class="vitrine-nome">{nome_curto}</div>'
+        
+        # Preço
+        preco_html = f'<div class="vitrine-preco"><b>R$ {p["preco_venda"]:.2f}</b> <span>/ {p["unidade_medida"]}</span></div>'
+        
+        # Estoque
+        if p['quantidade_estoque'] > 0 or p['categoria'] == 'Horta (Ilimitado)':
+            estoque_html = "<div class='vitrine-estoque disp'>✓ Disponível</div>"
+        else:
+            estoque_html = "<div class='vitrine-estoque esgot'>✗ Esgotado</div>"
+            
+        card_html = f"""
+        <div class="vitrine-card">
+            {img_html}
+            {nome_html}
+            {preco_html}
+            {estoque_html}
+        </div>
+        """
+        html_cards.append(card_html)
+        
+    grid_html = f"""
+    <div class="vitrine-grid">
+        {"".join(html_cards)}
+    </div>
+    """
+    st.markdown(grid_html, unsafe_allow_html=True)
