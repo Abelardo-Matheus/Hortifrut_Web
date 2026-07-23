@@ -42,9 +42,9 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-st.markdown('<div id="btn-anchor"></div>', unsafe_allow_html=True)
 col_btn1, col_btn2, _ = st.columns([1, 1, 15])
 with col_btn1:
+    st.markdown('<div id="btn-anchor" style="display:none;"></div>', unsafe_allow_html=True)
     if st.session_state.logged_in:
         if st.button("🔓", help="Sair do Modo Admin"):
             st.session_state.logged_in = False
@@ -122,7 +122,7 @@ css_theme += '''
         .block-container { padding-top: 0rem !important; margin-top: 0 !important; }
         
         /* Flutuar os botões sobre o vídeo */
-        [data-testid="stElementContainer"]:has(#btn-anchor) + [data-testid="stElementContainer"] {
+        [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
             position: absolute !important;
             top: 15px;
             left: 15px;
