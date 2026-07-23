@@ -125,11 +125,11 @@ def render_admin():
                                 # Usa altura fixa de 45px e corta com "..." se passar de 2 linhas
                                 nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
                                 st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px;">{nome_curto}</div>', unsafe_allow_html=True)
-                                st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px;"><b>R$ {p["preco_venda"]:.2f}</b> / {p["unidade_medida"]}</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
                                 st.caption(f"Estoque: {p['quantidade_estoque']}")
                                 
                                 # Formulario de adição dentro do mesmo container
-                                qtd = st.number_input("Quantidade", min_value=0.01, value=1.00, step=1.0 if p['unidade_medida']=='UN' else 0.1, key=f"qtd_{p['id']}", label_visibility="collapsed")
+                                qtd = st.number_input("Quantidade", min_value=0.01, value=1.00, step=1.0, key=f"qtd_{p['id']}", label_visibility="collapsed")
                                 
                                 is_out_of_stock = p['quantidade_estoque'] <= 0
                                 if is_out_of_stock:
