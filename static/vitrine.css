@@ -3,7 +3,7 @@
    ================================================================= */
 
 /* ===== CABEÇALHO: VÍDEO LOGO ===== */
-/* Container com metade da altura original (~180px) */
+/* Container com altura aumentada (+100px) */
 .video-container {
     width: 100%;
     max-height: 280px;
@@ -18,7 +18,7 @@
     height: 100%;
     display: block;
     object-fit: fill;
-    max-height: 180px;
+    max-height: 280px;
 }
 
 /* ===== LAYOUT GERAL ===== */
