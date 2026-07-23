@@ -11,6 +11,21 @@
     margin-top: 0 !important;
 }
 
+[data-testid="stAppViewContainer"], .main, .block-container, [data-testid="stVerticalBlock"], [data-testid="stElementContainer"], [data-testid="stHorizontalBlock"] {
+    transform: none !important;
+    will-change: auto !important;
+    perspective: none !important;
+}
+
+/* Remover espaço vazio (gap) gerado pelos 4 primeiros elementos invisíveis do Streamlit (Botões, JS e CSS) */
+[data-testid="stMainBlockContainer"] > div > div > div > div:nth-child(1),
+[data-testid="stMainBlockContainer"] > div > div > div > div:nth-child(2),
+[data-testid="stMainBlockContainer"] > div > div > div > div:nth-child(3),
+[data-testid="stMainBlockContainer"] > div > div > div > div:nth-child(4) {
+    position: absolute !important;
+    top: -9999px !important;
+}
+
 /* Flutuar os botões sobre o vídeo e fixar diretamente nos cantos via classes injetadas por JS */
 .btn-canto-esquerdo {
     position: fixed !important;
