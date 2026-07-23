@@ -631,7 +631,7 @@ else:
     # ==========================================
     # VITRINE PÚBLICA (CLIENTES)
     # ==========================================
-    
+
     import os
     index_path = os.path.join(os.path.dirname(__file__), "index.html")
     if os.path.exists(index_path):
@@ -639,36 +639,45 @@ else:
             index_content = f.read()
     else:
         index_content = "<!-- STREAMLIT_WIDGETS -->"
-        
-    # Extrai o template do card, se existir
-    card_template = """<div class="vitrine-card">{img_html}<div class="vitrine-nome">{nome_curto}</div><div class="vitrine-preco"><b>R$ {preco_venda}</b></div>{estoque_html}</div>"""
+
+    # ── 1. Injeta CSS diretamente (sem depender de marcadores no HTML) ──────────
+    vitrine_css = load_css("vitrine.css")
+    st.markdown(f"<style>{css_theme}\n{vitrine_css}</style>", unsafe_allow_html=True)
+
+    # ── 2. Extrai o template do card do index.html ───────────────────────────────
+    card_template = (
+        '<div class="vitrine-card">'
+        '{img_html}'
+        '<div class="vitrine-nome">{nome_curto}</div>'
+        '<div class="vitrine-preco"><b>R$ {preco_venda}</b></div>'
+        '{estoque_html}'
+        '</div>'
+    )
     if "<!-- TEMPLATE_CARD_PRODUTO -->" in index_content and "<!-- FIM_TEMPLATE_CARD_PRODUTO -->" in index_content:
         start_idx = index_content.find("<!-- TEMPLATE_CARD_PRODUTO -->") + len("<!-- TEMPLATE_CARD_PRODUTO -->")
-        end_idx = index_content.find("<!-- FIM_TEMPLATE_CARD_PRODUTO -->")
+        end_idx   = index_content.find("<!-- FIM_TEMPLATE_CARD_PRODUTO -->")
         card_template = index_content[start_idx:end_idx].strip()
-        # Remove template para não renderizar na tela
+        # Remove o bloco de template para não renderizá-lo na tela
         index_content = index_content[:index_content.find("<!-- TEMPLATE_CARD_PRODUTO -->")]
-        
-    parts = index_content.split("<!-- STREAMLIT_WIDGETS -->")
-    part_top = parts[0] if len(parts) > 0 else ""
-    part_bottom = parts[1] if len(parts) > 1 else ""
 
-    vitrine_css = load_css("vitrine.css")
-    
-    # Renderiza TOPO (Vídeo e Estilos)
-    html_top = part_top.replace("{css_theme}", css_theme).replace("{vitrine_css}", vitrine_css)
-    if html_top.strip():
-        st.markdown(html_top, unsafe_allow_html=True)
-        
+    # ── 3. Divide em topo (header) e base (main) pelo marcador de widgets ────────
+    parts    = index_content.split("<!-- STREAMLIT_WIDGETS -->")
+    part_top = parts[0] if len(parts) > 0 else ""
+    part_bot = parts[1] if len(parts) > 1 else ""
+
+    # Renderiza o cabeçalho (vídeo, etc.)
+    if part_top.strip():
+        st.markdown(part_top, unsafe_allow_html=True)
+
+    # ── 4. Widgets nativos do Streamlit (busca + botão) ─────────────────────────
     produtos = db.get_produtos()
-    
-    # Dialog para solicitar produto
+
     @st.dialog("Qual produto você não encontrou?")
     def modal_solicitacao():
         st.write("Deixe sua sugestão e nós providenciaremos para você!")
         s_prod = st.text_input("Produto que você quer *")
         s_nome = st.text_input("Seu Nome *")
-        s_tel = st.text_input("Seu Telefone (Opcional)")
+        s_tel  = st.text_input("Seu Telefone (Opcional)")
         if st.button("Enviar Sugestão", type="primary", use_container_width=True):
             if s_prod and s_nome:
                 sucesso = db.add_solicitacao(s_prod, s_nome, s_tel)
@@ -682,13 +691,11 @@ else:
             else:
                 st.error("Preencha o Nome do Produto e o Seu Nome.")
 
-    # Filtro de pesquisa na esquerda e Botão na direita
     col_busca, col_vazio, col_btn = st.columns([3, 1, 2])
     with col_busca:
         busca = st.text_input("🔍 O que você procura hoje?", placeholder="Ex: Maçã, Alface, Abóbora...")
-    
     with col_btn:
-        st.write("") # alinhamento vertical com o text_input
+        st.write("")
         st.write("")
         if st.button("🤔 Não achou seu produto? Clique aqui!", use_container_width=True):
             modal_solicitacao()
@@ -696,35 +703,38 @@ else:
     prods_vitrine = produtos
     if busca:
         prods_vitrine = [p for p in produtos if busca.lower() in p['nome'].lower()]
-            
+
     st.write("")
     st.markdown("---")
-    
+
+    # ── 5. Monta os cards e injeta na grade ─────────────────────────────────────
     html_cards = []
     for p in prods_vitrine:
-        # Imagem
         if p.get("imagem_url"):
             img_html = f'<div class="vitrine-img-container"><img class="blend-img" src="{p["imagem_url"]}"></div>'
         else:
             img_html = '<div class="vitrine-img-container sem-imagem">Sem Imagem</div>'
-            
-        # Nome do Produto
+
         nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-        
-        # Estoque
+
         if p['quantidade_estoque'] > 0 or p['categoria'] == 'Horta (Ilimitado)':
             estoque_html = "<div class='vitrine-estoque disp'>✓ Disponível</div>"
         else:
             estoque_html = "<div class='vitrine-estoque esgot'>✗ Esgotado</div>"
-            
-        card_html_fmt = card_template.replace("{img_html}", img_html) \
-                                     .replace("{nome_curto}", nome_curto) \
-                                     .replace("{preco_venda}", f"{p['preco_venda']:.2f}") \
-                                     .replace("{estoque_html}", estoque_html)
-        html_cards.append(card_html_fmt)
-        
-    html_bottom = part_bottom.replace("{html_cards}", "".join(html_cards))
-    if html_bottom.strip():
-        st.markdown(html_bottom, unsafe_allow_html=True)
+
+        card = (card_template
+                .replace("{img_html}",    img_html)
+                .replace("{nome_curto}",  nome_curto)
+                .replace("{preco_venda}", f"{p['preco_venda']:.2f}")
+                .replace("{estoque_html}", estoque_html))
+        html_cards.append(card)
+
+    # Injeta os cards na parte inferior do index.html
+    # Suporta tanto <!-- PLACEHOLDER_CARDS --> quanto {html_cards} por retrocompatibilidade
+    html_bot = part_bot.replace("<!-- PLACEHOLDER_CARDS -->", "".join(html_cards)) \
+                       .replace("{html_cards}", "".join(html_cards))
+    if html_bot.strip():
+        st.markdown(html_bot, unsafe_allow_html=True)
 
     st.markdown("---")
+
