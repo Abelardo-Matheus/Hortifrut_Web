@@ -70,7 +70,7 @@ def render_admin():
                                 
                                 is_out_of_stock = p['quantidade_estoque'] <= 0
                                 if is_out_of_stock:
-                                    st.error("ESGOTADO")
+                                    st.button("Esgotado", key=f"btn_add_{p['id']}", use_container_width=True, disabled=True)
                                 else:
                                     if st.button("Adicionar", key=f"btn_add_{p['id']}", use_container_width=True, type="primary"):
                                         if qtd > p['quantidade_estoque'] and p['categoria'] != 'Horta (Ilimitado)':
