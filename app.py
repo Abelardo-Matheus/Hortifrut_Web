@@ -777,6 +777,201 @@ _components.html(f"""
         }}
     }}
     
+                        if r['status'] == 'Pendente':
+                            if st.button("Atendido", key=f"req_ok_{r['id']}", type="primary"):
+                                db.update_solicitacao_status(r['id'], 'Atendido')
+                                st.rerun()
+                            if st.button("Recusado", key=f"req_no_{r['id']}"):
+                                db.update_solicitacao_status(r['id'], 'Recusado')
+                                st.rerun()
+                            if r.get('receber_whatsapp') and r.get('telefone'):
+                                import urllib.parse
+                                import re
+                                num = re.sub(r'\D', '', r['telefone'])
+                                if not num.startswith('55') and len(num) >= 10:
+                                    num = '55' + num
+                                msg = f"Olá {r['nome_cliente']}! O produto '{r['nome_produto']}' que você pediu acabou de chegar no Hortifruti! 🎉"
+                                safe_msg = urllib.parse.quote(msg)
+                                wpp_link = f"https://api.whatsapp.com/send?phone={num}&text={safe_msg}"
+                                st.markdown(f'<a href="{wpp_link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366; color:white; padding:8px; border-radius:5px; text-align:center; font-weight:bold; font-size:14px; margin-top:5px; margin-bottom:5px;">📱 Enviar WhatsApp</div></a>', unsafe_allow_html=True)
+    
+    # ROTEAMENTO
+# ==========================================
+# ROTEAMENTO PRINCIPAL (PÚBLICO VS ADMIN)
+# ==========================================
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'show_admin' not in st.session_state:
+    st.session_state.show_admin = False
+
+if st.session_state.show_admin:
+    render_admin()
+else:
+    # ==========================================
+    # VITRINE PÚBLICA (CLIENTES)
+    # ==========================================
+
+    import os
+    index_path = os.path.join(os.path.dirname(__file__), "index.html")
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            index_content = f.read()
+    else:
+        index_content = "<!-- STREAMLIT_WIDGETS -->"
+
+    # ── 1. Injeta CSS diretamente (sem depender de marcadores no HTML) ──────────
+    vitrine_css = load_css("vitrine.css")
+    st.markdown(f"<style>{css_theme}\n{vitrine_css}</style>", unsafe_allow_html=True)
+
+    # ── 2. Extrai o template do card do index.html ───────────────────────────────
+    card_template = (
+        '<div class="vitrine-card">'
+        '{img_html}'
+        '<div class="vitrine-nome">{nome_curto}</div>'
+        '<div class="vitrine-preco"><b>R$ {preco_venda}</b></div>'
+        '{estoque_html}'
+        '</div>'
+    )
+    if "<!-- TEMPLATE_CARD_PRODUTO -->" in index_content and "<!-- FIM_TEMPLATE_CARD_PRODUTO -->" in index_content:
+        start_idx = index_content.find("<!-- TEMPLATE_CARD_PRODUTO -->") + len("<!-- TEMPLATE_CARD_PRODUTO -->")
+        end_idx   = index_content.find("<!-- FIM_TEMPLATE_CARD_PRODUTO -->")
+        card_template = index_content[start_idx:end_idx].strip()
+        # Remove o bloco de template para não renderizá-lo na tela
+        index_content = index_content[:index_content.find("<!-- TEMPLATE_CARD_PRODUTO -->")]
+
+    # ── 3. Divide em topo (header) e base (main) pelo marcador de widgets ────────
+    parts    = index_content.split("<!-- STREAMLIT_WIDGETS -->")
+    part_top = parts[0] if len(parts) > 0 else ""
+    part_bot = parts[1] if len(parts) > 1 else ""
+
+    # Renderiza o cabeçalho (vídeo, etc.)
+    if part_top.strip():
+        st.markdown(part_top, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # ── 4. Widgets nativos do Streamlit (busca + botão) ─────────────────────────
+    produtos = db.get_produtos()
+
+    @st.dialog("Qual produto você não encontrou?")
+    def modal_solicitacao():
+        st.write("Deixe sua sugestão e nós providenciaremos para você!")
+        s_prod = st.text_input("Produto que você quer *")
+        s_nome = st.text_input("Seu Nome *")
+        s_tel  = st.text_input("Seu Telefone / WhatsApp (Opcional)")
+        receber_wpp = st.checkbox("Deseja receber uma mensagem no WhatsApp caso o produto chegue?")
+        if st.button("Enviar Sugestão", type="primary", use_container_width=True):
+            if s_prod and s_nome:
+                if receber_wpp and not s_tel:
+                    st.error("Para ser avisado pelo WhatsApp, preencha o seu Telefone!")
+                else:
+                    sucesso = db.add_solicitacao(s_prod, s_nome, s_tel, receber_wpp)
+                if sucesso:
+                    st.success("Sugestão enviada com sucesso! Muito obrigado.")
+                    import time
+                    time.sleep(1.5)
+                    st.rerun()
+                else:
+                    st.error("Erro interno. Verifique se você rodou o schema.sql no banco de dados!")
+            else:
+                st.error("Preencha o Nome do Produto e o Seu Nome.")
+
+    col_busca, col_vazio, col_btn = st.columns([3, 1, 2])
+    with col_busca:
+        busca = st.text_input("🔍 O que você procura hoje?", placeholder="Ex: Maçã, Alface, Abóbora...")
+    with col_btn:
+        st.write("")
+        st.write("")
+        if st.button("🤔 Não achou seu produto? Clique aqui!", use_container_width=True):
+            modal_solicitacao()
+
+    prods_vitrine = produtos
+    if busca:
+        prods_vitrine = [p for p in produtos if busca.lower() in p['nome'].lower()]
+
+    st.write("")
+
+    # ── 5. Monta os cards e injeta na grade ─────────────────────────────────────
+    html_cards = []
+    for p in prods_vitrine:
+        if p.get("imagem_url"):
+            img_html = f'<div class="vitrine-img-container"><img class="blend-img" src="{p["imagem_url"]}"></div>'
+        else:
+            img_html = '<div class="vitrine-img-container sem-imagem">Sem Imagem</div>'
+
+        nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
+
+        if p['quantidade_estoque'] > 0 or p['categoria'] == 'Horta (Ilimitado)':
+            estoque_html = "<div class='vitrine-estoque disp'>✓ Disponível</div>"
+        else:
+            estoque_html = "<div class='vitrine-estoque esgot'>✗ Esgotado</div>"
+
+        card = (card_template
+                .replace("{img_html}",    img_html)
+                .replace("{nome_curto}",  nome_curto)
+                .replace("{preco_venda}", f"{p['preco_venda']:.2f}")
+                .replace("{estoque_html}", estoque_html))
+        html_cards.append(card)
+
+    # Injeta os cards na parte inferior do index.html
+    # Suporta tanto <!-- PLACEHOLDER_CARDS --> quanto {html_cards} por retrocompatibilidade
+    html_bot = part_bot.replace("<!-- PLACEHOLDER_CARDS -->", "".join(html_cards)) \
+                       .replace("{html_cards}", "".join(html_cards))
+    if html_bot.strip():
+        st.markdown(html_bot, unsafe_allow_html=True)
+
+    st.markdown("---")
+
+# ── Botões funcionais do Streamlit (ficam ocultos via JS/Marker) ────
+# Deixamos no final do arquivo para que não ocupem espaço (margem preta) 
+# no topo da página antes do vídeo renderizar.
+with st.container():
+    st.markdown("<div id='hf-hidden-btns-marker' style='display:none'></div>", unsafe_allow_html=True)
+    
+    if st.session_state.show_admin:
+        if st.button("🔓", key="st_btn_admin"):
+            st.session_state.logged_in = False
+            st.session_state.show_admin = False
+            controller.remove("auth_token")
+            import time; time.sleep(0.3)
+            st.rerun()
+    else:
+        icon = "⚙️" if st.session_state.logged_in else "🔐"
+        if st.button(icon, key="st_btn_admin"):
+            if st.session_state.logged_in:
+                st.session_state.show_admin = True
+                st.rerun()
+            else:
+                modal_login()
+
+    _tema_icon = "🌙" if st.session_state.light_mode else "☀️"
+    if st.button(_tema_icon, key="st_btn_tema"):
+        st.session_state.light_mode = not st.session_state.light_mode
+        st.rerun()
+
+# ── Portal visual — box fixa superior ───────────────────────────────
+import streamlit.components.v1 as _components
+
+if st.session_state.show_admin:
+    _admin_icon = "🔓"
+else:
+    _admin_icon = "⚙️" if st.session_state.logged_in else "🔐"
+_tema_icon_js = "🌙" if st.session_state.light_mode else "☀️"
+
+_components.html(f"""
+<script>
+(function() {{
+    var doc = window.parent.document;
+    
+    // 1. Encontra e esconde o container dos botões originais do Streamlit
+    var marker = doc.getElementById('hf-hidden-btns-marker');
+    if (marker) {{
+        var stContainer = marker.closest('[data-testid="stVerticalBlock"]');
+        if (stContainer) {{
+            stContainer.style.display = 'none';
+        }}
+    }}
+    
     // 2. Remove TODOS os portais visuais anteriores para evitar duplicatas
     var oldPortals = doc.querySelectorAll('#hf-btn-portal');
     oldPortals.forEach(function(p) {{ p.remove(); }});
@@ -806,27 +1001,27 @@ _components.html(f"""
     
     // 5. Lógica de estado do Vídeo Logo (Tocar só uma vez)
     var logoVid = doc.querySelector('.logo-video');
-    if (logoVid) {
-        if (sessionStorage.getItem('hf_video_played')) {
+    if (logoVid) {{
+        if (sessionStorage.getItem('hf_video_played')) {{
             // Se já tocou nessa sessão, pausa e pula pro final
             logoVid.removeAttribute('autoplay');
             logoVid.pause();
             
             // Espera o metadado carregar pra ter certeza da duração e ir pro último frame
-            if (logoVid.readyState >= 1) {
+            if (logoVid.readyState >= 1) {{
                 logoVid.currentTime = logoVid.duration || 999;
-            } else {
-                logoVid.addEventListener('loadedmetadata', function() {
+            }} else {{
+                logoVid.addEventListener('loadedmetadata', function() {{
                     logoVid.currentTime = logoVid.duration || 999;
-                });
-            }
-        } else {
+                }});
+            }}
+        }} else {{
             // Marca como tocado quando terminar
-            logoVid.addEventListener('ended', function() {
+            logoVid.addEventListener('ended', function() {{
                 sessionStorage.setItem('hf_video_played', 'true');
-            });
-        }
-    }
+            }});
+        }}
+    }}
 }})();
 </script>
 """, height=0, width=0)
