@@ -15,6 +15,24 @@
 }
 
 /* =================================================================
+   Evita que wrappers do Streamlit criem stacking context competindo
+   com o portal (z-index:0 sem isolation = não compete).
+   ================================================================= */
+[data-testid="stAppViewContainer"],
+[data-testid="stVerticalBlock"],
+[data-testid="stElementContainer"],
+[data-testid="stHorizontalBlock"] {
+    isolation: auto !important;
+    z-index: 0 !important;
+}
+
+/* Vídeo logo também não compete */
+.video-container {
+    z-index: 0;
+    isolation: auto;
+}
+
+/* =================================================================
    ESCONDE os botões Streamlit originais (são ocultos mas funcionais)
    O clique é disparado via JS pelo portal abaixo.
    ================================================================= */
@@ -35,6 +53,7 @@
    Edite aqui para mudar aparência e posição da box.
    ================================================================= */
 #hf-btn-portal {
+    /* Fixo na viewport — sempre no topo mesmo com scroll */
     position: fixed;
     top: 10px;
     left: 0;
@@ -45,7 +64,10 @@
     align-items: center;
     padding: 0 12px;
     box-sizing: border-box;
-    z-index: 999999;
+    /* Z-index máximo possível — aparece sobre tudo */
+    z-index: 2147483647;
+    /* Cria contexto próprio isolado para garantir sobreposição */
+    isolation: isolate;
     pointer-events: none;   /* a box em si não bloqueia cliques */
 }
 
