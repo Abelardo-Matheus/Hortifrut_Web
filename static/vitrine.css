@@ -6,7 +6,7 @@
 /* Container com metade da altura original (~180px) */
 .video-container {
     width: 100%;
-    max-height: 180px;
+    max-height: 280px;
     line-height: 0;
     overflow: hidden;
     display: block;
@@ -32,7 +32,7 @@
 }
 
 /* Zera espaço extra do container do Streamlit */
-[data-testid="stAppViewContainer"] > section:first-child {
+[data-testid="stAppViewContainer"]>section:first-child {
     padding-top: 0 !important;
     margin-top: 0 !important;
 }
@@ -126,8 +126,13 @@
     font-size: 14px;
 }
 
-.disp { color: #2980b9; }
-.esgot { color: #e74c3c; }
+.disp {
+    color: #2980b9;
+}
+
+.esgot {
+    color: #e74c3c;
+}
 
 /* ===== RESPONSIVIDADE MOBILE ===== */
 @media (max-width: 768px) {
@@ -142,10 +147,31 @@
         border-width: 2px;
     }
 
-    .blend-img         { max-height: 80px; }
-    .vitrine-img-container { height: 80px; margin-bottom: 5px; }
-    .vitrine-nome      { font-size: 13px; height: 34px; line-height: 1.2; }
-    .vitrine-preco     { font-size: 14px; }
-    .vitrine-preco span { font-size: 11px; margin-left: 2px; }
-    .vitrine-estoque   { font-size: 11px; }
+    .blend-img {
+        max-height: 80px;
+    }
+
+    .vitrine-img-container {
+        height: 80px;
+        margin-bottom: 5px;
+    }
+
+    .vitrine-nome {
+        font-size: 13px;
+        height: 34px;
+        line-height: 1.2;
+    }
+
+    .vitrine-preco {
+        font-size: 14px;
+    }
+
+    .vitrine-preco span {
+        font-size: 11px;
+        margin-left: 2px;
+    }
+
+    .vitrine-estoque {
+        font-size: 11px;
+    }
 }
