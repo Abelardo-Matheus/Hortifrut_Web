@@ -145,3 +145,194 @@ def get_vendas():
     except Exception as e:
         st.error(f"Erro ao buscar histórico de vendas: {e}")
         return []
+
+# ==========================================
+# FIADO (ANOTADO)
+# ==========================================
+
+def get_clientes():
+    try:
+        resp = supabase.table("clientes").select("*").order("nome").execute()
+        return resp.data
+    except Exception as e:
+        st.error(f"Erro ao buscar clientes: {e}")
+        return []
+
+def add_cliente(nome, telefone=""):
+    try:
+        supabase.table("clientes").insert({"nome": nome.strip().title(), "telefone": telefone}).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao adicionar cliente (Talvez nome já exista): {e}")
+        return False
+
+def delete_cliente(cliente_id):
+    try:
+        # FK constraints handle cascade delete for compras_anotadas
+        supabase.table("clientes").delete().eq("id", cliente_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao excluir cliente: {e}")
+        return False
+
+def anotar_compra(cliente_id, itens):
+    try:
+        for item in itens:
+            prod_id = item['produto_id']
+            qtd = float(item['quantidade'])
+            
+            dados = {
+                "cliente_id": cliente_id,
+                "produto_id": prod_id,
+                "quantidade": qtd,
+                "preco_unitario": float(item['preco_unitario'])
+            }
+            supabase.table("compras_anotadas").insert(dados).execute()
+            
+            # Descontar do estoque (Se não for Horta)
+            if item.get('is_estoque_controlado', True):
+                prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", prod_id).execute()
+                if prod_data.data:
+                    novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - qtd)
+                    supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao anotar compra: {e}")
+        return False
+
+def get_compras_anotadas(cliente_id):
+    try:
+        resp = supabase.table("compras_anotadas").select("*, produtos(nome, unidade_medida)").eq("cliente_id", cliente_id).eq("pago", False).order("data_hora", desc=True).execute()
+        return resp.data
+    except Exception as e:
+        st.error(f"Erro ao buscar fiado: {e}")
+        return []
+
+def pagar_compras(compras_ids, total_venda, lucro_venda):
+    if not compras_ids: return False
+    try:
+        # 1. Registra no Caixa do dia (Vendas)
+        if total_venda > 0:
+            supabase.table("vendas").insert({
+                "valor_total": float(total_venda),
+                "lucro_total": float(lucro_venda),
+                "forma_pagamento": "Fiado Pago"
+            }).execute()
+            
+        # 2. Marca as compras como pagas
+        supabase.table("compras_anotadas").update({"pago": True}).in_("id", compras_ids).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao pagar compras: {e}")
+        return False
+
+def excluir_compra_anotada(compra_id):
+    try:
+        # 1. Pega os dados para devolver ao estoque
+        resp = supabase.table("compras_anotadas").select("produto_id, quantidade, pago").eq("id", compra_id).execute()
+        if resp.data and not resp.data[0]['pago']:
+            prod_id = resp.data[0]['produto_id']
+            qtd = resp.data[0]['quantidade']
+            
+            # Devolve ao estoque
+            prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", prod_id).execute()
+            if prod_data.data:
+                novo_est = prod_data.data[0]['quantidade_estoque'] + qtd
+                supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+                
+        # 2. Exclui a anotação
+        supabase.table("compras_anotadas").delete().eq("id", compra_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao excluir fiado: {e}")
+        return False
+
+# ==========================================
+# RETIRADAS PARA CASA
+# ==========================================
+
+def registrar_retirada_casa(itens):
+    try:
+        for item in itens:
+            prod_id = item['produto_id']
+            qtd = float(item['quantidade'])
+            
+            dados = {
+                "produto_id": prod_id,
+                "quantidade": qtd,
+                "custo_unitario": float(item['preco_custo']) # Retirada é a preço de custo
+            }
+            supabase.table("retiradas_casa").insert(dados).execute()
+            
+            # Descontar do estoque
+            if item.get('is_estoque_controlado', True):
+                prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", prod_id).execute()
+                if prod_data.data:
+                    novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - qtd)
+                    supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao registrar retirada: {e}")
+        return False
+
+def get_retiradas_mes(ano, mes):
+    # Supondo que data_hora ISO contém "YYYY-MM"
+    prefixo_mes = f"{ano}-{mes:02d}"
+    try:
+        resp = supabase.table("retiradas_casa").select("*, produtos(nome, unidade_medida)").like("data_hora", f"{prefixo_mes}%").order("data_hora", desc=True).execute()
+        return resp.data
+    except Exception as e:
+        st.error(f"Erro ao buscar retiradas: {e}")
+        return []
+
+def excluir_retirada_casa(retirada_id):
+    try:
+        resp = supabase.table("retiradas_casa").select("produto_id, quantidade").eq("id", retirada_id).execute()
+        if resp.data:
+            prod_id = resp.data[0]['produto_id']
+            qtd = resp.data[0]['quantidade']
+            
+            prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", prod_id).execute()
+            if prod_data.data:
+                novo_est = prod_data.data[0]['quantidade_estoque'] + qtd
+                supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+                
+        supabase.table("retiradas_casa").delete().eq("id", retirada_id).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao excluir retirada: {e}")
+        return False
+
+# ==========================================
+# BALANÇO MENSAL
+# ==========================================
+
+def get_balanco_mes(ano, mes):
+    try:
+        resp = supabase.table("balanco_mensal").select("*").eq("ano", ano).eq("mes", mes).execute()
+        if resp.data:
+            return resp.data[0]
+        return {'estoque_inicial': 0.0, 'estoque_final': 0.0}
+    except Exception as e:
+        return {'estoque_inicial': 0.0, 'estoque_final': 0.0}
+
+def save_balanco_mes(ano, mes, estoque_inicial, estoque_final):
+    try:
+        # Tenta buscar se existe
+        resp = supabase.table("balanco_mensal").select("id").eq("ano", ano).eq("mes", mes).execute()
+        if resp.data:
+            supabase.table("balanco_mensal").update({
+                "estoque_inicial": float(estoque_inicial),
+                "estoque_final": float(estoque_final)
+            }).eq("id", resp.data[0]['id']).execute()
+        else:
+            supabase.table("balanco_mensal").insert({
+                "ano": ano,
+                "mes": mes,
+                "estoque_inicial": float(estoque_inicial),
+                "estoque_final": float(estoque_final)
+            }).execute()
+        return True
+    except Exception as e:
+        st.error(f"Erro ao salvar balanço: {e}")
+        return False
