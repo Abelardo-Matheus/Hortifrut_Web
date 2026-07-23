@@ -74,14 +74,15 @@ with tab_pdv:
                     p = prods_filtrados[i+j]
                     with cols[j]:
                         img_tag = f'<img src="{p.get("imagem_url")}" style="max-width: 100%; border-radius: 5px; margin-bottom: 10px; max-height: 120px; object-fit: contain;">' if p.get("imagem_url") else ""
-                        st.markdown(f"""
-                        <div class="produto-card">
-                            {img_tag}
-                            <h4 style="margin-bottom: 5px; color: #2c3e50;">{p['nome']}</h4>
-                            <p style="margin-bottom: 5px; color: #27ae60; font-weight: bold; font-size: 18px;">R$ {p['preco_venda']:.2f} / {p['unidade_medida']}</p>
-                            <p style="margin-bottom: 10px; color: #7f8c8d; font-size: 12px;">Estoque: {p['quantidade_estoque']}</p>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        html_content = f"""
+<div class="produto-card">
+    {img_tag}
+    <h4 style="margin-bottom: 5px; color: #2c3e50;">{p['nome']}</h4>
+    <p style="margin-bottom: 5px; color: #27ae60; font-weight: bold; font-size: 18px;">R$ {p['preco_venda']:.2f} / {p['unidade_medida']}</p>
+    <p style="margin-bottom: 10px; color: #7f8c8d; font-size: 12px;">Estoque: {p['quantidade_estoque']}</p>
+</div>
+"""
+                        st.markdown(html_content, unsafe_allow_html=True)
                         
                         # Formulario de adição (Qtd manual)
                         qtd = st.number_input(f"Qtd ({p['unidade_medida']})", min_value=0.01, value=1.00, step=1.0 if p['unidade_medida']=='UN' else 0.1, key=f"qtd_{p['id']}")
