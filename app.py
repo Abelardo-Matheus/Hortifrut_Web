@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import datetime
 
 # Configuração da Página Web - MUST BE THE FIRST STREAMLIT COMMAND
@@ -181,17 +180,19 @@ with tab_estoque:
     st.markdown("### 📋 Tabela de Produtos")
     
     if produtos:
-        df_produtos = pd.DataFrame(produtos)
-        # Reordenar e formatar colunas para exibição
-        df_view = df_produtos[['nome', 'categoria', 'quantidade_estoque', 'unidade_medida', 'preco_custo', 'preco_venda']].copy()
-        df_view.columns = ['Nome', 'Categoria', 'Estoque', 'UN/KG', 'Custo (R$)', 'Venda (R$)']
+        produtos_view = []
+        for p in produtos:
+            estoque_str = f"⚠️ {p['quantidade_estoque']}" if p['quantidade_estoque'] <= 5 else p['quantidade_estoque']
+            produtos_view.append({
+                'Nome': p['nome'],
+                'Categoria': p['categoria'],
+                'Estoque': estoque_str,
+                'UN/KG': p['unidade_medida'],
+                'Custo (R$)': p['preco_custo'],
+                'Venda (R$)': p['preco_venda']
+            })
         
-        # Destacar estoque baixo
-        def colorir_estoque(val):
-            color = 'red' if val <= 5 else 'black'
-            return f'color: {color}'
-            
-        st.dataframe(df_view.style.map(colorir_estoque, subset=['Estoque']), use_container_width=True, hide_index=True)
+        st.dataframe(produtos_view, use_container_width=True, hide_index=True)
     else:
         st.info("Nenhum produto cadastrado no banco de dados.")
 
@@ -204,14 +205,35 @@ with tab_relatorios:
     vendas = db.get_vendas()
     
     if vendas:
-        df_vendas = pd.DataFrame(vendas)
-        df_vendas['data_venda'] = pd.to_datetime(df_vendas['data_venda']).dt.tz_convert('America/Sao_Paulo')
+        from datetime import timezone, timedelta
         
-        hoje = datetime.datetime.now().date()
-        vendas_hoje = df_vendas[df_vendas['data_venda'].dt.date == hoje]
+        tz_br = timezone(timedelta(hours=-3))
+        hoje = datetime.datetime.now(tz_br).date()
         
-        total_hoje = vendas_hoje['valor_total'].sum()
-        lucro_hoje = vendas_hoje['lucro_total'].sum()
+        vendas_hoje = []
+        hist_view = []
+        
+        total_hoje = 0.0
+        lucro_hoje = 0.0
+        
+        for v in vendas:
+            try:
+                dt_str = v['data_venda'].split('.')[0].replace('Z', '+00:00')
+                dt_obj = datetime.datetime.fromisoformat(dt_str).astimezone(tz_br)
+            except Exception:
+                dt_obj = datetime.datetime.now(tz_br)
+                
+            if dt_obj.date() == hoje:
+                vendas_hoje.append(v)
+                total_hoje += v['valor_total']
+                lucro_hoje += v['lucro_total']
+                
+            hist_view.append({
+                'Data/Hora': dt_obj.strftime('%d/%m/%Y %H:%M:%S'),
+                'Valor Total (R$)': v['valor_total'],
+                'Forma Pagamento': v['forma_pagamento']
+            })
+            
         qtd_vendas_hoje = len(vendas_hoje)
         
         c1, c2, c3 = st.columns(3)
@@ -220,10 +242,6 @@ with tab_relatorios:
         c3.metric("Qtd de Vendas Hoje", f"{qtd_vendas_hoje}")
         
         st.markdown("### Histórico Recente (Últimas 100 vendas)")
-        df_hist = df_vendas[['data_venda', 'valor_total', 'forma_pagamento']].copy()
-        df_hist['data_venda'] = df_hist['data_venda'].dt.strftime('%d/%m/%Y %H:%M:%S')
-        df_hist.columns = ['Data/Hora', 'Valor Total (R$)', 'Forma Pagamento']
-        
-        st.dataframe(df_hist, use_container_width=True, hide_index=True)
+        st.dataframe(hist_view, use_container_width=True, hide_index=True)
     else:
         st.info("Ainda não há histórico de vendas registrado no banco.")

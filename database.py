@@ -1,10 +1,12 @@
 import os
 import streamlit as st
 from supabase import create_client, Client
-from dotenv import load_dotenv
-
 # Carregar chaves locais do .env (se estiver rodando no PC)
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 def get_supabase_client() -> Client:
     """Inicializa e retorna o cliente do Supabase de forma segura"""
