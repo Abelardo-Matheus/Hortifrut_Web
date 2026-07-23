@@ -77,8 +77,8 @@ if st.session_state.light_mode:
         .video-container {
             filter: invert(1) hue-rotate(180deg); 
             background-color: #0e1117;
-            border-radius: 15px;
-            padding: 10px;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
             margin-bottom: 20px;
             display: flex;
             justify-content: center;
@@ -86,7 +86,7 @@ if st.session_state.light_mode:
         .logo-video {
             mix-blend-mode: screen;
             width: 100%;
-            max-width: 500px;
+            max-width: 800px;
         }
     '''
 else:
@@ -96,8 +96,8 @@ else:
         }
         .video-container {
             background-color: #0e1117;
-            border-radius: 15px;
-            padding: 10px;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
             margin-bottom: 20px;
             display: flex;
             justify-content: center;
@@ -105,7 +105,7 @@ else:
         .logo-video {
             mix-blend-mode: screen;
             width: 100%;
-            max-width: 500px;
+            max-width: 800px;
         }
     '''
 
