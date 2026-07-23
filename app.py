@@ -1,15 +1,16 @@
 import streamlit as st
 import pandas as pd
-import database as db
 import datetime
 
-# Configuração da Página Web
+# Configuração da Página Web - MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
     page_title="Sistema Hortifruti Online",
     page_icon="🍎",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+import database as db
 
 # Estilização CSS customizada (Design Limpo e Responsivo)
 st.markdown("""
