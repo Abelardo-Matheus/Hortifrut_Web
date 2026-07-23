@@ -692,7 +692,7 @@ else:
     
     video_html = """
     <div class="video-container">
-        <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo.mp4" autoplay muted playsinline></video>
+        <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova.mp4" autoplay muted playsinline></video>
     </div>
     """
     st.markdown(video_html, unsafe_allow_html=True)
