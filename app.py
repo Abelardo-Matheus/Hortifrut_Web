@@ -729,17 +729,17 @@ with st.container():
     st.markdown("<div id='hf-hidden-btns-marker' style='display:none'></div>", unsafe_allow_html=True)
     
     if st.session_state.logged_in:
-        if st.button("🔓", help="Sair do Modo Admin", key="st_btn_admin"):
+        if st.button("🔓", key="st_btn_admin"):
             st.session_state.logged_in = False
             controller.remove("auth_token")
             import time; time.sleep(0.3)
             st.rerun()
     else:
-        if st.button("🔐", help="Login Administrativo", key="st_btn_admin"):
+        if st.button("🔐", key="st_btn_admin"):
             modal_login()
 
     _tema_icon = "🌙" if st.session_state.light_mode else "☀️"
-    if st.button(_tema_icon, help="Mudar Tema", key="st_btn_tema"):
+    if st.button(_tema_icon, key="st_btn_tema"):
         st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
 

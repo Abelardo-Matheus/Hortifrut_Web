@@ -15,6 +15,7 @@ CREATE TABLE produtos (
     quantidade_estoque NUMERIC(10, 3) NOT NULL DEFAULT 0.000,
     data_compra TEXT,
     imagem_url TEXT,
+    unidade_medida TEXT DEFAULT 'Un',
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
