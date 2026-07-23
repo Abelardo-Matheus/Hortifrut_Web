@@ -123,41 +123,37 @@ css_theme += '''
         [data-testid="stHeader"] { display: none !important; }
         [data-testid="stDecoration"] { display: none !important; }
         .block-container { padding-top: 0rem !important; margin-top: 0 !important; }
-        /* Flutuar os botões sobre o vídeo e fixar diretamente nos cantos */
+        /* Flutuar os botões sobre o vídeo e forçar a largura total da tela (100vw) */
         [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
-            height: 0px !important;
-            min-height: 0px !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            z-index: 999999;
-        }
-        [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"]:nth-child(1) {
-            position: fixed !important;
+            position: absolute !important;
             top: 15px !important;
-            left: 15px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            width: 100vw !important;
+            margin: 0 !important;
+            padding: 0 25px !important;
+            box-sizing: border-box !important;
+            z-index: 999999 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+            pointer-events: none !important;
+        }
+        [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"] {
+            position: static !important;
             width: auto !important;
             min-width: 0 !important;
-            z-index: 999999 !important;
+            flex: 0 0 auto !important;
+            pointer-events: auto !important;
         }
         [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"]:nth-child(2) {
-            position: fixed !important;
-            top: 15px !important;
-            right: 15px !important;
-            width: auto !important;
-            min-width: 0 !important;
-            z-index: 999999 !important;
             display: flex !important;
             justify-content: flex-end !important;
         }
-        /* Responsividade para telas menores (celulares) */
         @media (max-width: 768px) {
-            [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"]:nth-child(1) {
-                left: 10px !important;
-                top: 10px !important;
-            }
-            [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"]:nth-child(2) {
-                right: 10px !important;
-                top: 10px !important;
+            [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
+                padding: 0 10px !important;
             }
         }
         [data-testid="stHorizontalBlock"]:has(#btn-anchor) button {
