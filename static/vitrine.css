@@ -1,3 +1,7 @@
+/* =================================================================
+   VITRINE.CSS — Estilos da vitrine pública (clientes)
+   ================================================================= */
+
 /* ===== CABEÇALHO: VÍDEO LOGO ===== */
 /* Container com metade da altura original (~180px) */
 .video-container {
@@ -17,17 +21,17 @@
     max-height: 180px;
 }
 
-/* ===== LAYOUT GERAL =====
-/* Expandir a tela sem padding no topo */
+/* ===== LAYOUT GERAL ===== */
+/* Sem padding no topo — o vídeo encosta na borda */
 .block-container {
     padding-top: 0 !important;
     margin-top: 0 !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    padding-left: 2rem;
+    padding-right: 2rem;
     max-width: 100% !important;
 }
 
-/* Zera qualquer espaço do app container do Streamlit */
+/* Zera espaço extra do container do Streamlit */
 [data-testid="stAppViewContainer"] > section:first-child {
     padding-top: 0 !important;
     margin-top: 0 !important;
@@ -36,20 +40,20 @@
 /* Responsividade para Celulares */
 @media (max-width: 768px) {
     .block-container {
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
 }
 
-/* Imagem menor para caber mais na tela */
+/* ===== IMAGENS DOS PRODUTOS ===== */
 .blend-img {
-    max-width: 100%; 
-    max-height: 120px; 
-    object-fit: contain; 
+    max-width: 100%;
+    max-height: 120px;
+    object-fit: contain;
     border-radius: 5px;
 }
 
-/* Grid CSS Responsivo para a Vitrine (muito superior as colunas nativas) */
+/* ===== GRADE DE PRODUTOS ===== */
 .vitrine-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -64,6 +68,7 @@
     }
 }
 
+/* ===== CARD DE PRODUTO ===== */
 .vitrine-card {
     border: 3px solid rgba(128, 128, 128, 0.2);
     border-radius: 10px;
@@ -74,41 +79,73 @@
     box-sizing: border-box;
     background-color: transparent;
 }
+
 .vitrine-img-container {
-    display: flex; justify-content: center; height: 120px; align-items: center; margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    height: 120px;
+    align-items: center;
+    margin-bottom: 10px;
 }
+
 .sem-imagem {
     color: #ccc;
 }
+
 .vitrine-nome {
-    height: 48px; overflow: hidden; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-bottom: 5px; text-align: center;
+    height: 48px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 5px;
+    text-align: center;
 }
+
 .vitrine-preco {
-    display: flex; justify-content: center; align-items: center; font-size: 20px; margin-bottom: 5px; color: #27ae60; text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    margin-bottom: 5px;
+    color: #27ae60;
+    text-align: center;
 }
+
 .vitrine-preco span {
-    font-size:14px; color:#7f8c8d; margin-left: 5px;
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-left: 5px;
 }
+
 .vitrine-estoque {
-    text-align: center; font-weight: bold; font-size: 14px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
 }
+
 .disp { color: #2980b9; }
 .esgot { color: #e74c3c; }
 
+/* ===== RESPONSIVIDADE MOBILE ===== */
 @media (max-width: 768px) {
     .vitrine-grid {
-        /* Força 3 colunas em telas pequenas, independente de quão pequenas sejam */
-        grid-template-columns: repeat(3, 1fr) !important;
+        /* 3 colunas fixas em telas pequenas */
+        grid-template-columns: repeat(3, 1fr);
         gap: 5px;
     }
+
     .vitrine-card {
-        padding: 0.3rem !important;
-        border-width: 2px !important;
+        padding: 0.3rem;
+        border-width: 2px;
     }
-    .blend-img { max-height: 80px; }
+
+    .blend-img         { max-height: 80px; }
     .vitrine-img-container { height: 80px; margin-bottom: 5px; }
-    .vitrine-nome { font-size: 13px !important; height: 34px !important; line-height: 1.2; }
-    .vitrine-preco { font-size: 14px !important; }
-    .vitrine-preco span { font-size: 11px !important; margin-left: 2px; }
-    .vitrine-estoque { font-size: 11px !important; }
+    .vitrine-nome      { font-size: 13px; height: 34px; line-height: 1.2; }
+    .vitrine-preco     { font-size: 14px; }
+    .vitrine-preco span { font-size: 11px; margin-left: 2px; }
+    .vitrine-estoque   { font-size: 11px; }
 }

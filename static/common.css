@@ -1,55 +1,57 @@
-[data-testid="stHeader"] {
-    display: none !important;
-}
+/* =================================================================
+   COMMON.CSS — Estilos globais aplicados em todas as telas
+   ================================================================= */
 
+/* Esconde a barra de menu/header nativa do Streamlit */
+[data-testid="stHeader"],
 [data-testid="stDecoration"] {
     display: none !important;
 }
 
+/* Remove padding/margin do topo do container principal */
 .block-container {
-    padding-top: 0rem !important;
+    padding-top: 0 !important;
     margin-top: 0 !important;
 }
 
+/* Remove transforms que podem criar contextos de empilhamento indesejados */
 [data-testid="stAppViewContainer"],
 .main,
 .block-container,
 [data-testid="stVerticalBlock"],
 [data-testid="stElementContainer"],
 [data-testid="stHorizontalBlock"] {
-    transform: none !important;
-    will-change: auto !important;
-    perspective: none !important;
-    /* Remove position:relative para não prender os botões fixed dentro do container */
+    transform: none;
+    will-change: auto;
+    perspective: none;
+    /* Remove position:relative para não prender os botões fixed */
     position: static !important;
 }
 
 /* =====================================================
    OVERRIDE DAS CLASSES CACHE DO STREAMLIT (emotion)
-   Remove o position: relative das classes geradas
-   automaticamente que quebram o position: fixed dos botões.
+   Remove o position: relative que quebra o fixed dos botões.
    ===================================================== */
 
-/* Classe específica identificada pelo usuário */
+/* Classe específica identificada */
 .st-emotion-cache-c2ku3e {
     position: static !important;
 }
 
-/* Padrão amplo: qualquer coluna dentro do primeiro bloco horizontal */
+/* Qualquer coluna dentro do primeiro bloco horizontal */
 [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"] {
     position: static !important;
 }
 
-/* Padrão amplo: qualquer wrapper emotion-cache dentro do primeiro bloco */
+/* Qualquer wrapper emotion-cache dentro do primeiro bloco */
 [data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"] {
     position: static !important;
 }
 
-/* Padrão amplo: qualquer .stButton wrapper */
+/* Qualquer .stButton wrapper no primeiro bloco */
 [data-testid="stHorizontalBlock"]:first-of-type .stButton {
     position: static !important;
 }
-
 
 /* =====================================================
    BOTÕES FLUTUANTES (Admin + Tema) — FIXOS NA TELA
@@ -79,9 +81,9 @@
     padding: 0 !important;
     z-index: 999999 !important;
     margin: 0 !important;
-    border-radius: 8px !important;
-    font-size: 18px !important;
-    line-height: 1 !important;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
 }
 
 /* BOTÃO DIREITO — Ícone Tema (☀️ / 🌙) */
@@ -98,9 +100,9 @@
     padding: 0 !important;
     z-index: 999999 !important;
     margin: 0 !important;
-    border-radius: 8px !important;
-    font-size: 18px !important;
-    line-height: 1 !important;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
 }
 
 /* Responsividade para celulares */
