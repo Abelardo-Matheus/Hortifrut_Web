@@ -117,6 +117,8 @@ CREATE POLICY "Permitir tudo em retiradas_casa" ON retiradas_casa FOR ALL USING 
 CREATE POLICY "Permitir tudo em balanco_mensal" ON balanco_mensal FOR ALL USING (true);
 
 -- ==========================================================
+
+-- ==========================================================
 -- SOLICITAÇÕES DE PRODUTOS
 -- ==========================================================
 CREATE TABLE IF NOT EXISTS public.solicitacoes (
@@ -124,6 +126,7 @@ CREATE TABLE IF NOT EXISTS public.solicitacoes (
     nome_produto VARCHAR(255) NOT NULL,
     nome_cliente VARCHAR(255) NOT NULL,
     telefone VARCHAR(50),
+    receber_whatsapp BOOLEAN DEFAULT FALSE,
     status VARCHAR(20) DEFAULT 'Pendente' CHECK (status IN ('Pendente', 'Atendido', 'Recusado')),
     data_solicitacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

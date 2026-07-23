@@ -363,12 +363,13 @@ def get_solicitacoes():
         print('Erro ao buscar solicitacoes:', e)
         return []
 
-def add_solicitacao(nome_produto, nome_cliente, telefone):
+def add_solicitacao(nome_produto, nome_cliente, telefone, receber_whatsapp=False):
     try:
         data = {
             'nome_produto': nome_produto,
             'nome_cliente': nome_cliente,
             'telefone': telefone,
+            'receber_whatsapp': receber_whatsapp,
             'status': 'Pendente'
         }
         supabase.table('solicitacoes').insert(data).execute()

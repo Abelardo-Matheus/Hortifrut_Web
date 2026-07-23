@@ -584,6 +584,8 @@ def render_admin():
                     with c1:
                         st.markdown(f"**Produto:** {r['nome_produto']}")
                         st.markdown(f"**Cliente:** {r['nome_cliente']} (Tel: {r['telefone']})")
+                        if r.get('receber_whatsapp'):
+                            st.markdown("💬 **Avisar no WhatsApp**")
                     with c2:
                         from datetime import timezone, timedelta
                         import datetime as dt_lib
@@ -604,6 +606,16 @@ def render_admin():
                             if st.button("Recusado", key=f"req_no_{r['id']}"):
                                 db.update_solicitacao_status(r['id'], 'Recusado')
                                 st.rerun()
+                            if r.get('receber_whatsapp') and r.get('telefone'):
+                                import urllib.parse
+                                import re
+                                num = re.sub(r'\D', '', r['telefone'])
+                                if not num.startswith('55') and len(num) >= 10:
+                                    num = '55' + num
+                                msg = f"Olá {r['nome_cliente']}! O produto '{r['nome_produto']}' que você pediu acabou de chegar no Hortifruti! 🎉"
+                                safe_msg = urllib.parse.quote(msg)
+                                wpp_link = f"https://api.whatsapp.com/send?phone={num}&text={safe_msg}"
+                                st.markdown(f'<a href="{wpp_link}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366; color:white; padding:8px; border-radius:5px; text-align:center; font-weight:bold; font-size:14px; margin-top:5px; margin-bottom:5px;">📱 Enviar WhatsApp</div></a>', unsafe_allow_html=True)
     
     # ROTEAMENTO
 # ==========================================
@@ -668,10 +680,14 @@ else:
         st.write("Deixe sua sugestão e nós providenciaremos para você!")
         s_prod = st.text_input("Produto que você quer *")
         s_nome = st.text_input("Seu Nome *")
-        s_tel  = st.text_input("Seu Telefone (Opcional)")
+        s_tel  = st.text_input("Seu Telefone / WhatsApp (Opcional)")
+        receber_wpp = st.checkbox("Deseja receber uma mensagem no WhatsApp caso o produto chegue?")
         if st.button("Enviar Sugestão", type="primary", use_container_width=True):
             if s_prod and s_nome:
-                sucesso = db.add_solicitacao(s_prod, s_nome, s_tel)
+                if receber_wpp and not s_tel:
+                    st.error("Para ser avisado pelo WhatsApp, preencha o seu Telefone!")
+                else:
+                    sucesso = db.add_solicitacao(s_prod, s_nome, s_tel, receber_wpp)
                 if sucesso:
                     st.success("Sugestão enviada com sucesso! Muito obrigado.")
                     import time
