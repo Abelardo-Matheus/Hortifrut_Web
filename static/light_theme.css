@@ -12,10 +12,11 @@ img, iframe {
     filter: invert(1) hue-rotate(180deg); 
     background-color: #0e1117;
     width: 100vw;
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 330px;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin: 0 !important;
+    height: 360px !important;
     display: flex;
     justify-content: center;
     align-items: center;
