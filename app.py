@@ -39,10 +39,10 @@ def modal_login():
             else:
                 st.error("Usuário ou senha incorretos")
 
-# Adiciona espaçamento para não ficar debaixo do cabeçalho nativo do Streamlit
-st.markdown("<br><br>", unsafe_allow_html=True)
+if "light_mode" not in st.session_state:
+    st.session_state.light_mode = False
 
-col_btn1, _ = st.columns([1, 15])
+col_btn1, col_btn2, _ = st.columns([1, 1, 15])
 with col_btn1:
     if st.session_state.logged_in:
         if st.button("🔓", help="Sair do Modo Admin"):
@@ -54,6 +54,28 @@ with col_btn1:
     else:
         if st.button("🔐", help="Login Administrativo"):
             modal_login()
+
+with col_btn2:
+    tema_icon = "🌙" if st.session_state.light_mode else "☀️"
+    if st.button(tema_icon, help="Mudar Tema"):
+        st.session_state.light_mode = not st.session_state.light_mode
+        st.rerun()
+
+if st.session_state.light_mode:
+    st.markdown('''
+        <style>
+            [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
+                filter: invert(1) hue-rotate(180deg); 
+                background-color: #ffffff !important;
+            }
+            .stApp {
+                background-color: #ffffff !important;
+            }
+            img, video, iframe, .blend-img, .vitrine-img-container { 
+                filter: invert(1) hue-rotate(180deg); 
+            }
+        </style>
+    ''', unsafe_allow_html=True)
 
 def render_admin():
     
@@ -730,7 +752,3 @@ else:
     st.markdown(grid_html, unsafe_allow_html=True)
 
     st.markdown("---")
-    c_end1, c_end2, c_end3 = st.columns([2,1,2])
-    with c_end2:
-        if st.button("🔐 Área Administrativa", use_container_width=True):
-            modal_login()
