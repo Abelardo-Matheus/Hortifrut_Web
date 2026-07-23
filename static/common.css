@@ -24,7 +24,13 @@
     transform: none;
     will-change: auto;
     perspective: none;
-    /* Remove position:relative para não prender os botões fixed */
+}
+
+/* Remove position:relative APENAS nos wrappers internos dos botões
+   (não nos containers de scroll do Streamlit) */
+[data-testid="stVerticalBlock"],
+[data-testid="stElementContainer"],
+[data-testid="stHorizontalBlock"] {
     position: static !important;
 }
 
