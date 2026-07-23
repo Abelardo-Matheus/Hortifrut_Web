@@ -286,8 +286,7 @@ def render_admin():
                                 else:
                                     st.markdown('<div style="height: 105px; display:flex; align-items:center; justify-content:center; border-radius:5px; opacity: 0.5;">Sem Foto</div>', unsafe_allow_html=True)
                                 
-                                nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px; text-align: center;">{nome_curto}</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="min-height: 45px; font-weight: bold; font-size: 15px; margin-bottom: 5px; text-align: center;">{p["nome"]}</div>', unsafe_allow_html=True)
                                 st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
                                 st.markdown(f'<div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
                                 
