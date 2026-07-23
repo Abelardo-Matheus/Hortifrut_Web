@@ -14,6 +14,7 @@ CREATE TABLE produtos (
     preco_venda NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     quantidade_estoque NUMERIC(10, 3) NOT NULL DEFAULT 0.000,
     unidade_medida TEXT NOT NULL DEFAULT 'UN', -- 'UN' (Unidade) ou 'KG' (Quilo)
+    imagem_url TEXT,
     criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

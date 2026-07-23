@@ -73,8 +73,10 @@ with tab_pdv:
                 if i + j < len(prods_filtrados):
                     p = prods_filtrados[i+j]
                     with cols[j]:
+                        img_tag = f'<img src="{p.get("imagem_url")}" style="max-width: 100%; border-radius: 5px; margin-bottom: 10px; max-height: 120px; object-fit: contain;">' if p.get("imagem_url") else ""
                         st.markdown(f"""
                         <div class="produto-card">
+                            {img_tag}
                             <h4 style="margin-bottom: 5px; color: #2c3e50;">{p['nome']}</h4>
                             <p style="margin-bottom: 5px; color: #27ae60; font-weight: bold; font-size: 18px;">R$ {p['preco_venda']:.2f} / {p['unidade_medida']}</p>
                             <p style="margin-bottom: 10px; color: #7f8c8d; font-size: 12px;">Estoque: {p['quantidade_estoque']}</p>
