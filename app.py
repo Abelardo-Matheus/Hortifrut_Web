@@ -441,8 +441,7 @@ else:
     
     produtos = db.get_produtos()
     
-    # CSS Mágico para fundo transparente: mix-blend-mode: multiply
-    # Isso remove o fundo branco das fotos baixadas da internet!
+    # CSS para as imagens da vitrine
     st.markdown('''
     <style>
     .blend-img {
@@ -450,7 +449,6 @@ else:
         max-height: 160px; 
         object-fit: contain; 
         border-radius: 5px;
-        mix-blend-mode: multiply; /* MAGIA DA TRANSPARÊNCIA */
     }
     </style>
     ''', unsafe_allow_html=True)
