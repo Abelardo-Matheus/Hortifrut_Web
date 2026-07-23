@@ -90,7 +90,7 @@ if st.session_state.light_mode:
             mix-blend-mode: screen;
             width: 100vw;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover;
         }
     '''
 else:
@@ -113,21 +113,31 @@ else:
             mix-blend-mode: screen;
             width: 100vw;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover;
         }
     '''
 
 css_theme += '''
         [data-testid="stHeader"] { display: none !important; }
+        [data-testid="stDecoration"] { display: none !important; }
         .block-container { padding-top: 0rem !important; margin-top: 0 !important; }
         
-        /* Flutuar os botões sobre o vídeo */
+        /* Flutuar os botões sobre o vídeo e forçar lado a lado */
         [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
             position: absolute !important;
             top: 15px;
             left: 15px;
             z-index: 999;
-            width: 120px !important;
+            width: auto !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 10px !important;
+        }
+        [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"] {
+            width: auto !important;
+            min-width: 0 !important;
+            flex: 0 0 auto !important;
         }
 '''
 
