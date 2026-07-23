@@ -15,6 +15,18 @@ import database as db
 def render_admin():
     
     
+    if st.session_state.get("fechar_sidebar", False):
+        import streamlit.components.v1 as components
+        components.html('''
+            <script>
+                // Tenta encontrar o botão de fechar a sidebar no painel pai e clica
+                const doc = window.parent.document;
+                const buttons = Array.from(doc.querySelectorAll('button'));
+                const closeBtn = buttons.find(b => b.getAttribute('data-testid') === 'baseButton-headerNoPadding' || b.innerHTML.includes('svg'));
+                if(closeBtn) closeBtn.click();
+            </script>
+        ''', height=0, width=0)
+        st.session_state.fechar_sidebar = False
     
     st.title("🍎 Gestão Hortifruti Online")
     
@@ -517,6 +529,7 @@ with st.sidebar:
         if st.button("Entrar", type="primary", use_container_width=True):
             if usuario == "joel" and senha == "531735":
                 st.session_state.logged_in = True
+                st.session_state.fechar_sidebar = True
                 st.rerun()
             else:
                 st.error("Usuário ou senha incorretos")
@@ -541,24 +554,30 @@ else:
     # CSS para as imagens da vitrine
     st.markdown('''
     <style>
+    /* Expandir a tela ao máximo possível */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 100% !important;
+    }
+    
+    /* Imagem menor para caber mais na tela */
     .blend-img {
         max-width: 100%; 
-        max-height: 160px; 
+        max-height: 120px; 
         object-fit: contain; 
         border-radius: 5px;
     }
+    
+    /* Borda de 3px para as caixas de produtos */
+    div[data-testid="stVerticalBlockBorderWrapper"] > div {
+        border-width: 3px !important;
+        border-radius: 10px !important;
+        padding: 0.8rem !important;
+    }
     </style>
     ''', unsafe_allow_html=True)
-    
-    col_busca, _ = st.columns([1, 1])
-    with col_busca:
-        busca = st.text_input("🔍 O que você procura hoje?", placeholder="Ex: Maçã, Alface, Abóbora...")
-    
-    prods_vitrine = produtos
-    if busca:
-        prods_vitrine = [p for p in produtos if busca.lower() in p['nome'].lower()]
-        
-    st.write("") # espaco
     
     # Dialog para solicitar produto
     @st.dialog("Qual produto você não encontrou?")
@@ -569,20 +588,36 @@ else:
         s_tel = st.text_input("Seu Telefone (Opcional)")
         if st.button("Enviar Sugestão", type="primary", use_container_width=True):
             if s_prod and s_nome:
-                db.add_solicitacao(s_prod, s_nome, s_tel)
-                st.success("Sugestão enviada com sucesso! Muito obrigado.")
+                sucesso = db.add_solicitacao(s_prod, s_nome, s_tel)
+                if sucesso:
+                    st.success("Sugestão enviada com sucesso! Muito obrigado.")
+                    import time
+                    time.sleep(1.5)
+                    st.rerun()
+                else:
+                    st.error("Erro interno. Verifique se você rodou o schema.sql no banco de dados!")
             else:
                 st.error("Preencha o Nome do Produto e o Seu Nome.")
+
+    # Filtro de pesquisa na esquerda e Botão na direita
+    col_busca, col_vazio, col_btn = st.columns([3, 1, 2])
+    with col_busca:
+        busca = st.text_input("🔍 O que você procura hoje?", placeholder="Ex: Maçã, Alface, Abóbora...")
     
-    c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
-    with c_btn2:
+    with col_btn:
+        st.write("") # alinhamento vertical com o text_input
+        st.write("")
         if st.button("🤔 Não achou seu produto? Clique aqui!", use_container_width=True):
             modal_solicitacao()
+
+    prods_vitrine = produtos
+    if busca:
+        prods_vitrine = [p for p in produtos if busca.lower() in p['nome'].lower()]
             
     st.write("")
     st.markdown("---")
     
-    cols_per_row = 4
+    cols_per_row = 6
     for i in range(0, len(prods_vitrine), cols_per_row):
         cols = st.columns(cols_per_row)
         for j in range(cols_per_row):
@@ -592,7 +627,7 @@ else:
                     with st.container(border=True):
                         # Imagem com o blend mode (fundo branco fica transparente)
                         if p.get("imagem_url"):
-                            st.markdown(f'<div style="display: flex; justify-content: center; height: 160px; align-items: center; margin-bottom: 10px;"><img class="blend-img" src="{p["imagem_url"]}"></div>', unsafe_allow_html=True)
+                            st.markdown(f'<div style="display: flex; justify-content: center; height: 120px; align-items: center; margin-bottom: 10px;"><img class="blend-img" src="{p["imagem_url"]}"></div>', unsafe_allow_html=True)
                         else:
                             st.markdown('<div style="height: 170px; display: flex; justify-content: center; align-items: center; color: #ccc;">Sem Imagem</div>', unsafe_allow_html=True)
                             
