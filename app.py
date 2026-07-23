@@ -65,12 +65,8 @@ with col_btn2:
 if st.session_state.light_mode:
     st.markdown('''
         <style>
-            [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
+            .stApp { 
                 filter: invert(1) hue-rotate(180deg); 
-                background-color: #ffffff !important;
-            }
-            .stApp {
-                background-color: #ffffff !important;
             }
             img, video, iframe, .blend-img, .vitrine-img-container { 
                 filter: invert(1) hue-rotate(180deg); 
