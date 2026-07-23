@@ -19,7 +19,6 @@
     display: block;
     object-fit: fill;
     max-height: 390px;
-    mix-blend-mode: screen;
 }
 
 /* ===== LAYOUT GERAL ===== */
