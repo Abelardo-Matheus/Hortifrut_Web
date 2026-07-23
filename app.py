@@ -169,7 +169,7 @@ def render_admin():
                 custo = c4.number_input("Preço de Custo (R$)", min_value=0.0, step=0.1)
                 venda = c5.number_input("Preço de Venda (R$) *", min_value=0.0, step=0.1)
                 estoque = c6.number_input("Estoque Inicial", min_value=0.0, step=1.0)
-                unidade = c7.selectbox("Vendido por", ["UN", "KG"])
+                unidade = c7.text_input("Data de Compra", placeholder="Ex: 02/06/2026")
                 
                 imagem_upload = st.file_uploader("Foto do Produto (Opcional)", type=["png", "jpg", "jpeg"])
                 
@@ -250,7 +250,7 @@ def render_admin():
                     'Nome': p['nome'],
                     'Categoria': p['categoria'],
                     'Estoque': estoque_str,
-                    'UN/KG': p['unidade_medida'],
+                    'Data Compra': p.get('data_compra', ''),
                     'Custo (R$)': p['preco_custo'],
                     'Venda (R$)': p['preco_venda']
                 })
@@ -316,7 +316,7 @@ def render_admin():
                             data_fmt = c['data_hora']
                             
                         nome_prod = c['produtos']['nome'] if c.get('produtos') else 'Produto Excluído'
-                        un_medida = c['produtos']['unidade_medida'] if c.get('produtos') else 'UN'
+                        un_medida = c['produtos'].get('data_compra', '') if c.get('produtos') else ''
                         
                         dividas_view.append({
                             "ID": c['id'],
@@ -703,7 +703,7 @@ else:
         nome_html = f'<div class="vitrine-nome">{nome_curto}</div>'
         
         # Preço
-        preco_html = f'<div class="vitrine-preco"><b>R$ {p["preco_venda"]:.2f}</b> <span>/ {p["unidade_medida"]}</span></div>'
+        preco_html = f'<div class="vitrine-preco"><b>R$ {p["preco_venda"]:.2f}</b></div>'
         
         # Estoque
         if p['quantidade_estoque'] > 0 or p['categoria'] == 'Horta (Ilimitado)':
