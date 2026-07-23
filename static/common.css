@@ -11,10 +11,17 @@
     margin-top: 0 !important;
 }
 
-[data-testid="stAppViewContainer"], .main, .block-container, [data-testid="stVerticalBlock"], [data-testid="stElementContainer"], [data-testid="stHorizontalBlock"] {
+[data-testid="stAppViewContainer"],
+.main,
+.block-container,
+[data-testid="stVerticalBlock"],
+[data-testid="stElementContainer"],
+[data-testid="stHorizontalBlock"] {
     transform: none !important;
     will-change: auto !important;
     perspective: none !important;
+    /* Remove position:relative para não prender os botões fixed dentro do container */
+    position: static !important;
 }
 
 /* =====================================================
@@ -56,6 +63,7 @@
     position: fixed !important;
     top: 12px !important;
     right: 12px !important;
+    left: auto !important;
     width: 42px !important;
     height: 42px !important;
     min-width: 42px !important;
