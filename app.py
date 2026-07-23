@@ -61,7 +61,8 @@ def render_admin():
                                     
                                 # Textos nativos do Streamlit (adaptam automaticamente para Claro/Escuro sem sumir)
                                 # Usa altura fixa de 45px e corta com "..." se passar de 2 linhas
-                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px;">{p["nome"]}</div>', unsafe_allow_html=True)
+                                nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
+                            st.markdown(f'<div style=\"height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px;\">{nome_curto}</div>', unsafe_allow_html=True)
                                 st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px;"><b>R$ {p["preco_venda"]:.2f}</b> / {p["unidade_medida"]}</div>', unsafe_allow_html=True)
                                 st.caption(f"Estoque: {p['quantidade_estoque']}")
                                 
@@ -479,7 +480,8 @@ else:
                             st.markdown('<div style="height: 170px; display: flex; justify-content: center; align-items: center; color: #ccc;">Sem Imagem</div>', unsafe_allow_html=True)
                             
                         # Nome do Produto
-                        st.markdown(f'<div style="height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 20px; margin-bottom: 5px; text-align: center;">{p["nome"]}</div>', unsafe_allow_html=True)
+                        nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
+                        st.markdown(f'<div style=\"height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 20px; margin-bottom: 5px; text-align: center;\">{nome_curto}</div>', unsafe_allow_html=True)
                         
                         # Preço
                         st.markdown(f'<div style="font-size: 22px; margin-bottom: 5px; color: #27ae60; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b> <span style="font-size:14px; color:#7f8c8d;">/ {p["unidade_medida"]}</span></div>', unsafe_allow_html=True)
