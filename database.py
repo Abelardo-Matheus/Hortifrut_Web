@@ -202,7 +202,7 @@ def anotar_compra(cliente_id, itens):
 
 def get_compras_anotadas(cliente_id):
     try:
-        resp = supabase.table("compras_anotadas").select("*, produtos(nome, unidade_medida)").eq("cliente_id", cliente_id).eq("pago", False).order("data_hora", desc=True).execute()
+        resp = supabase.table("compras_anotadas").select("*, produtos(nome, data_compra)").eq("cliente_id", cliente_id).eq("pago", False).order("data_hora", desc=True).execute()
         return resp.data
     except Exception as e:
         st.error(f"Erro ao buscar fiado: {e}")
@@ -291,7 +291,7 @@ def get_retiradas_mes(ano, mes):
     data_fim = f"{prox_ano}-{prox_mes:02d}-01T00:00:00.000Z"
     
     try:
-        resp = supabase.table("retiradas_casa").select("*, produtos(nome, unidade_medida)").gte("data_hora", data_inicio).lt("data_hora", data_fim).order("data_hora", desc=True).execute()
+        resp = supabase.table("retiradas_casa").select("*, produtos(nome, data_compra)").gte("data_hora", data_inicio).lt("data_hora", data_fim).order("data_hora", desc=True).execute()
         return resp.data
     except Exception as e:
         st.error(f"Erro ao buscar retiradas: {e}")

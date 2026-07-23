@@ -463,7 +463,7 @@ def render_admin():
                         data_fmt = r['data_hora']
                         
                     nome_prod = r['produtos']['nome'] if r.get('produtos') else 'Produto Excluído'
-                    un_medida = r['produtos']['unidade_medida'] if r.get('produtos') else 'UN'
+                    un_medida = r['produtos'].get('data_compra', '') if r.get('produtos') else ''
                     sub_custo = r['quantidade'] * r['custo_unitario']
                     custo_total_ret += sub_custo
                     
