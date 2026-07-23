@@ -15,128 +15,113 @@
 }
 
 /* =================================================================
-   RESET DE STACKING CONTEXT
-   Qualquer uma dessas propriedades nos containers pai quebra o
-   position:fixed dos botões (eles ficam presos ao container, não
-   à viewport). Zeramos todas para garantir que fixed = viewport.
+   ESCONDE os botões Streamlit originais (são ocultos mas funcionais)
+   O clique é disparado via JS pelo portal abaixo.
    ================================================================= */
-[data-testid="stAppViewContainer"],
-.main,
-.block-container,
-[data-testid="stVerticalBlock"],
-[data-testid="stElementContainer"],
-[data-testid="stHorizontalBlock"] {
-    transform: none !important;
-    will-change: auto !important;
-    perspective: none !important;
-    filter: none !important;
-    contain: none !important;
-    isolation: auto !important;
+[data-testid="stHorizontalBlock"]:first-of-type {
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 /* =================================================================
-   WRAPPER DOS BOTÕES — zerado, sem espaço no layout
+   PORTAL — Box de botões fixo no topo da viewport
+   Vive diretamente no document.body, fora do Streamlit.
+   Edite aqui para mudar aparência e posição da box.
    ================================================================= */
-[data-testid="stHorizontalBlock"]:first-of-type,
-.botoes-wrapper {
-    height: 0 !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-    position: relative !important;
-    background: transparent !important;
-    border: none !important;
-    gap: 0 !important;
-}
-
-/* Divs internas também sem espaço */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"],
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stElementContainer"],
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stVerticalBlock"],
-[data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"],
-[data-testid="stHorizontalBlock"]:first-of-type .stButton,
-.st-emotion-cache-c2ku3e {
-    position: static !important;
-    height: auto !important;
-    width: auto !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-    transform: none !important;
-    filter: none !important;
-    contain: none !important;
-    isolation: auto !important;
-}
-
-/* =================================================================
-   BOTÃO ADMIN (🔐 / 🔓) — FIXO NA ESQUERDA da viewport
-   Edite apenas esta seção para mudar o botão de admin.
-   ================================================================= */
-.btn-admin,
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button {
-    position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
-    right: auto !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    z-index: 999999 !important;
-    border-radius: 8px;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-}
-
-/* =================================================================
-   BOTÃO TEMA (☀️ / 🌙) — FIXO NA DIREITA da viewport
-   Edite apenas esta seção para mudar o botão de tema.
-   ================================================================= */
-.btn-tema,
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button {
+#hf-btn-portal {
     position: fixed;
-    top: 12px !important;
-    right: 12px !important;
-    left: auto !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    z-index: 999999 !important;
-    border-radius: 8px;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
+    top: 10px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 12px;
+    box-sizing: border-box;
+    z-index: 999999;
+    pointer-events: none;   /* a box em si não bloqueia cliques */
 }
 
 /* =================================================================
-   RESPONSIVIDADE — Celulares
+   BOTÃO ADMIN — esquerda da box
+   Edite aqui para mudar aparência do botão de admin.
    ================================================================= */
-@media (max-width: 768px) {
+#hf-btn-admin {
+    pointer-events: all;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(14, 17, 23, 0.80);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    .btn-admin,
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button {
-        top: 8px !important;
-        left: 8px !important;
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
+#hf-btn-admin:hover {
+    background: rgba(60, 70, 90, 0.90);
+    transform: scale(1.07);
+}
+
+#hf-btn-admin:active {
+    transform: scale(0.96);
+}
+
+/* =================================================================
+   BOTÃO TEMA — direita da box
+   Edite aqui para mudar aparência do botão de tema.
+   ================================================================= */
+#hf-btn-tema {
+    pointer-events: all;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(14, 17, 23, 0.80);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#hf-btn-tema:hover {
+    background: rgba(60, 70, 90, 0.90);
+    transform: scale(1.07);
+}
+
+#hf-btn-tema:active {
+    transform: scale(0.96);
+}
+
+/* Responsividade — Celulares */
+@media (max-width: 768px) {
+    #hf-btn-portal {
+        top: 7px;
+        padding: 0 8px;
     }
 
-    .btn-tema,
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button {
-        top: 8px !important;
-        right: 8px !important;
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
+    #hf-btn-admin,
+    #hf-btn-tema {
+        width: 36px;
+        height: 36px;
+        font-size: 17px;
     }
 }

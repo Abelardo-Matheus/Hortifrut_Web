@@ -41,54 +41,62 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-col_btn1, col_btn2 = st.columns(2)
+# ── Botões funcionais do Streamlit (ficam ocultos via CSS) ───────────
+# O clique real é disparado pelo portal JS abaixo.
+_col_admin, _col_tema = st.columns([1, 1])
 
-with col_btn1:
+with _col_admin:
     if st.session_state.logged_in:
-        if st.button("🔓", help="Sair do Modo Admin"):
+        if st.button("🔓", help="Sair do Modo Admin", key="st_btn_admin"):
             st.session_state.logged_in = False
             controller.remove("auth_token")
-            import time
-            time.sleep(0.5)
+            import time; time.sleep(0.3)
             st.rerun()
     else:
-        if st.button("🔐", help="Login Administrativo"):
+        if st.button("🔐", help="Login Administrativo", key="st_btn_admin"):
             modal_login()
 
-with col_btn2:
-    tema_icon = "🌙" if st.session_state.light_mode else "☀️"
-    if st.button(tema_icon, help="Mudar Tema"):
+with _col_tema:
+    _tema_icon = "🌙" if st.session_state.light_mode else "☀️"
+    if st.button(_tema_icon, help="Mudar Tema", key="st_btn_tema"):
         st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
 
-# Injeta JS que aplica as classes CSS nomeadas nos elementos dos botões gerados pelo Streamlit.
-# Isso permite editar .botoes-wrapper, .btn-admin e .btn-tema no common.css facilmente.
-st.markdown("""
+# ── Portal visual (botão box fixo no topo) ──────────────────────────
+# Criado diretamente no document.body, fora de qualquer container do
+# Streamlit. Assim position:fixed funciona sem problemas de stacking.
+_admin_icon = "🔓" if st.session_state.logged_in else "🔐"
+_tema_icon_show = "🌙" if st.session_state.light_mode else "☀️"
+
+st.markdown(f"""
 <script>
-(function aplicarClassesBotoes() {
-    function patch() {
-        const wrapper = document.querySelector('[data-testid="stHorizontalBlock"]');
-        if (!wrapper) return false;
+(function() {{
+    // Remove portal anterior (rerun do Streamlit)
+    var old = document.getElementById('hf-btn-portal');
+    if (old) old.remove();
 
-        // Wrapper dos dois botões
-        wrapper.classList.add('botoes-wrapper');
+    // Cria a box com os dois botões
+    var portal = document.createElement('div');
+    portal.id = 'hf-btn-portal';
+    portal.innerHTML =
+        '<button id="hf-btn-admin" title="Admin">{_admin_icon}</button>' +
+        '<button id="hf-btn-tema"  title="Tema">{_tema_icon_show}</button>';
+    document.body.appendChild(portal);
 
-        // Botão Admin (1ª coluna)
-        const col1 = wrapper.querySelector('[data-testid="column"]:nth-child(1) button');
-        if (col1) col1.classList.add('btn-admin');
+    // Dispara clique no botão Streamlit correspondente
+    function clickSt(n) {{
+        var cols = document.querySelectorAll(
+            '[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]'
+        );
+        if (cols[n]) {{
+            var btn = cols[n].querySelector('button');
+            if (btn) btn.click();
+        }}
+    }}
 
-        // Botão Tema (2ª coluna)
-        const col2 = wrapper.querySelector('[data-testid="column"]:nth-child(2) button');
-        if (col2) col2.classList.add('btn-tema');
-
-        return true;
-    }
-
-    // Tenta imediatamente e novamente após 500ms para garantir que o DOM carregou
-    if (!patch()) {
-        setTimeout(patch, 500);
-    }
-})();
+    document.getElementById('hf-btn-admin').onclick = function() {{ clickSt(0); }};
+    document.getElementById('hf-btn-tema').onclick  = function() {{ clickSt(1); }};
+}})();
 </script>
 """, unsafe_allow_html=True)
 
