@@ -84,12 +84,13 @@ if st.session_state.light_mode:
             height: 350px;
             display: flex;
             justify-content: center;
+            align-items: center;
             overflow: hidden;
         }
         .logo-video {
             mix-blend-mode: screen;
             width: 100vw;
-            height: 100%;
+            height: 70%;
             object-fit: cover;
         }
     '''
@@ -107,12 +108,13 @@ else:
             height: 350px;
             display: flex;
             justify-content: center;
+            align-items: center;
             overflow: hidden;
         }
         .logo-video {
             mix-blend-mode: screen;
             width: 100vw;
-            height: 100%;
+            height: 70%;
             object-fit: cover;
         }
     '''
@@ -124,12 +126,14 @@ css_theme += '''
         
         /* Flutuar os botões sobre o vídeo e forçar lado a lado nos cantos */
         [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
-            position: absolute !important;
+            position: fixed !important;
             top: 15px;
-            left: 15px;
-            right: 15px;
-            width: calc(100% - 30px) !important;
-            z-index: 999;
+            left: 0px;
+            right: 0px;
+            width: 100vw !important;
+            padding: 0 15px !important;
+            box-sizing: border-box !important;
+            z-index: 999999;
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
