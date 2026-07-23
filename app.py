@@ -42,9 +42,9 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-st.markdown('<div id="btn-anchor" style="display:none; height:0; margin:0; padding:0;"></div>', unsafe_allow_html=True)
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
+    st.markdown('<div id="btn-anchor" style="position:absolute; width:0; height:0; visibility:hidden;"></div>', unsafe_allow_html=True)
     if st.session_state.logged_in:
         if st.button("🔓", help="Sair do Modo Admin"):
             st.session_state.logged_in = False
@@ -122,30 +122,19 @@ css_theme += '''
         [data-testid="stDecoration"] { display: none !important; }
         .block-container { padding-top: 0rem !important; margin-top: 0 !important; }
         
-        /* Ocultar container fantasma do anchor */
-        [data-testid="stElementContainer"]:has(#btn-anchor) {
-            display: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            height: 0 !important;
-        }
-        
         /* Flutuar os botões sobre o vídeo e forçar lado a lado */
-        [data-testid="stElementContainer"]:has(#btn-anchor) + [data-testid="stElementContainer"] {
+        [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
             position: absolute !important;
             top: 15px;
             left: 15px;
             z-index: 999;
             width: auto !important;
-        }
-        [data-testid="stElementContainer"]:has(#btn-anchor) + [data-testid="stElementContainer"] [data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
             gap: 10px !important;
-            width: auto !important;
         }
-        [data-testid="stElementContainer"]:has(#btn-anchor) + [data-testid="stElementContainer"] [data-testid="column"] {
+        [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"] {
             width: auto !important;
             min-width: 0 !important;
             flex: 0 0 auto !important;
