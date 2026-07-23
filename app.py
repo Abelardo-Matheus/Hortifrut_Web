@@ -632,10 +632,34 @@ else:
     # VITRINE PÚBLICA (CLIENTES)
     # ==========================================
     
-    video_html = load_html("vitrine_video.html")
+    import os
+    index_path = os.path.join(os.path.dirname(__file__), "index.html")
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            index_content = f.read()
+    else:
+        index_content = "<!-- STREAMLIT_WIDGETS -->"
+        
+    # Extrai o template do card, se existir
+    card_template = """<div class="vitrine-card">{img_html}<div class="vitrine-nome">{nome_curto}</div><div class="vitrine-preco"><b>R$ {preco_venda}</b></div>{estoque_html}</div>"""
+    if "<!-- TEMPLATE_CARD_PRODUTO -->" in index_content and "<!-- FIM_TEMPLATE_CARD_PRODUTO -->" in index_content:
+        start_idx = index_content.find("<!-- TEMPLATE_CARD_PRODUTO -->") + len("<!-- TEMPLATE_CARD_PRODUTO -->")
+        end_idx = index_content.find("<!-- FIM_TEMPLATE_CARD_PRODUTO -->")
+        card_template = index_content[start_idx:end_idx].strip()
+        # Remove template para não renderizar na tela
+        index_content = index_content[:index_content.find("<!-- TEMPLATE_CARD_PRODUTO -->")]
+        
+    parts = index_content.split("<!-- STREAMLIT_WIDGETS -->")
+    part_top = parts[0] if len(parts) > 0 else ""
+    part_bottom = parts[1] if len(parts) > 1 else ""
+
     vitrine_css = load_css("vitrine.css")
-    st.markdown(f'<style>{css_theme}</style>\n<style>{vitrine_css}</style>\n{video_html}', unsafe_allow_html=True)
     
+    # Renderiza TOPO (Vídeo e Estilos)
+    html_top = part_top.replace("{css_theme}", css_theme).replace("{vitrine_css}", vitrine_css)
+    if html_top.strip():
+        st.markdown(html_top, unsafe_allow_html=True)
+        
     produtos = db.get_produtos()
     
     # Dialog para solicitar produto
@@ -686,10 +710,6 @@ else:
             
         # Nome do Produto
         nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-        nome_html = f'<div class="vitrine-nome">{nome_curto}</div>'
-        
-        # Preço
-        preco_html = f'<div class="vitrine-preco"><b>R$ {p["preco_venda"]:.2f}</b></div>'
         
         # Estoque
         if p['quantidade_estoque'] > 0 or p['categoria'] == 'Horta (Ilimitado)':
@@ -697,17 +717,14 @@ else:
         else:
             estoque_html = "<div class='vitrine-estoque esgot'>✗ Esgotado</div>"
             
-        card_html = f"""<div class="vitrine-card">
-{img_html}
-{nome_html}
-{preco_html}
-{estoque_html}
-</div>"""
-        html_cards.append(card_html)
+        card_html_fmt = card_template.replace("{img_html}", img_html) \
+                                     .replace("{nome_curto}", nome_curto) \
+                                     .replace("{preco_venda}", f"{p['preco_venda']:.2f}") \
+                                     .replace("{estoque_html}", estoque_html)
+        html_cards.append(card_html_fmt)
         
-    grid_html = f"""<div class="vitrine-grid">
-{"".join(html_cards)}
-</div>"""
-    st.markdown(grid_html, unsafe_allow_html=True)
+    html_bottom = part_bottom.replace("{html_cards}", "".join(html_cards))
+    if html_bottom.strip():
+        st.markdown(html_bottom, unsafe_allow_html=True)
 
     st.markdown("---")

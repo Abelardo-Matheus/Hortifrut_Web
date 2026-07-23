@@ -1,0 +1,47 @@
+<!-- 
+  ========================================================
+  ARQUIVO PRINCIPAL DE EDIÇÃO DA VITRINE (PÚBLICO)
+  ========================================================
+  Este arquivo controla o layout e a aparência do site dos clientes.
+  O app.py (Streamlit) vai ler este arquivo e exibi-lo online.
+-->
+
+<!-- ================= 1. ESTILOS (CSS) ================= -->
+<style>
+    /* O Streamlit irá injetar os temas originais (claro/escuro) e vitrine.css aqui: */
+    {css_theme}
+    {vitrine_css}
+</style>
+
+<!-- ================= 2. TOPO DO SITE (VÍDEO/LOGO) ================= -->
+<div class="video-container">
+    <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova.mp4" autoplay muted playsinline></video>
+</div>
+<!-- Espaçador para empurrar o conteúdo abaixo do vídeo absoluto -->
+<div style="height: 360px; width: 100%;"></div>
+
+<!-- ================= 3. BARRA DE BUSCA (STREAMLIT) ================= -->
+<!-- 
+  A tag abaixo insere a busca interativa e o botão "Não achou?" nativos do app.py.
+  NÃO APAGUE ESTA LINHA:
+-->
+<!-- STREAMLIT_WIDGETS -->
+
+<!-- ================= 4. GRADE DE PRODUTOS ================= -->
+<div class="vitrine-grid">
+    {html_cards}
+</div>
+
+<!-- 
+  ========================================================
+  TEMPLATE DO CARD DO PRODUTO (NÃO MUDE O NOME DO MARCADOR)
+  ========================================================
+-->
+<!-- TEMPLATE_CARD_PRODUTO -->
+<div class="vitrine-card">
+    {img_html}
+    <div class="vitrine-nome">{nome_curto}</div>
+    <div class="vitrine-preco"><b>R$ {preco_venda}</b></div>
+    {estoque_html}
+</div>
+<!-- FIM_TEMPLATE_CARD_PRODUTO -->
