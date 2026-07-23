@@ -25,6 +25,33 @@
 }
 
 /* =====================================================
+   OVERRIDE DAS CLASSES CACHE DO STREAMLIT (emotion)
+   Remove o position: relative das classes geradas
+   automaticamente que quebram o position: fixed dos botões.
+   ===================================================== */
+
+/* Classe específica identificada pelo usuário */
+.st-emotion-cache-c2ku3e {
+    position: static !important;
+}
+
+/* Padrão amplo: qualquer coluna dentro do primeiro bloco horizontal */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"] {
+    position: static !important;
+}
+
+/* Padrão amplo: qualquer wrapper emotion-cache dentro do primeiro bloco */
+[data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"] {
+    position: static !important;
+}
+
+/* Padrão amplo: qualquer .stButton wrapper */
+[data-testid="stHorizontalBlock"]:first-of-type .stButton {
+    position: static !important;
+}
+
+
+/* =====================================================
    BOTÕES FLUTUANTES (Admin + Tema) — FIXOS NA TELA
    Ficam visíveis em qualquer posição do scroll.
    Mesmo tamanho, mesma margem, um em cada lado.
