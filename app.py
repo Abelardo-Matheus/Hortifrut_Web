@@ -88,9 +88,9 @@ _components.html(f"""
 (function() {{
     var doc = window.parent.document;
     
-    // Remove portal anterior
-    var old = doc.getElementById('hf-btn-portal');
-    if (old) old.remove();
+    // Remove TODOS os portais anteriores (evita duplicatas em reruns rápidos)
+    var oldPortals = doc.querySelectorAll('#hf-btn-portal');
+    oldPortals.forEach(function(p) {{ p.remove(); }});
 
     // Cria a box com os dois botões
     var portal = doc.createElement('div');
