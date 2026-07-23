@@ -22,24 +22,63 @@ if not st.session_state.logged_in:
     auth = controller.get("auth_token")
     if auth == "hortifrut_admin_ok":
         st.session_state.logged_in = True
-        # Re-executa para aplicar o estado
-        # st.rerun() # Não obrigatório, o layout reage a session_state
+        # st.rerun()
 
+@st.dialog("🔐 Acesso Restrito (Dono)")
+def modal_login():
+    with st.form("login_form"):
+        usuario = st.text_input("Usuário")
+        senha = st.text_input("Senha", type="password")
+        if st.form_submit_button("Entrar", type="primary", use_container_width=True):
+            if usuario == "joel" and senha == "531735":
+                st.session_state.logged_in = True
+                controller.set("auth_token", "hortifrut_admin_ok", max_age=31536000)
+                import time
+                time.sleep(0.5)
+                st.rerun()
+            else:
+                st.error("Usuário ou senha incorretos")
+
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+col_btn1, col_btn2, _ = st.columns([1, 1, 15])
+with col_btn1:
+    if st.session_state.logged_in:
+        if st.button("🔓", help="Sair do Modo Admin"):
+            st.session_state.logged_in = False
+            controller.remove("auth_token")
+            import time
+            time.sleep(0.5)
+            st.rerun()
+    else:
+        if st.button("🔐", help="Login Administrativo"):
+            modal_login()
+
+with col_btn2:
+    tema_icon = "☀️" if st.session_state.dark_mode else "🌙"
+    if st.button(tema_icon, help="Mudar Tema"):
+        st.session_state.dark_mode = not st.session_state.dark_mode
+        st.rerun()
+
+if st.session_state.dark_mode:
+    st.markdown('''
+        <style>
+            html, body, [data-testid="stAppViewContainer"] { 
+                filter: invert(1) hue-rotate(180deg) brightness(1.05); 
+                background-color: #121212 !important; 
+            }
+            img, video, iframe, .blend-img, .vitrine-img-container { 
+                filter: invert(1) hue-rotate(180deg); 
+            }
+        </style>
+    ''', unsafe_allow_html=True)
 
 def render_admin():
     
     
     
     st.title("🍎 Gestão Hortifruti Online")
-    col_t1, col_t2 = st.columns([4, 1])
-    with col_t2:
-        st.write("")
-        if st.button("🚪 Sair", use_container_width=True):
-            st.session_state.logged_in = False
-            controller.remove("auth_token")
-            import time
-            time.sleep(0.5)
-            st.rerun()
     
     # Carregar produtos do banco
     produtos = db.get_produtos()
@@ -538,21 +577,6 @@ else:
     # ==========================================
     # VITRINE PÚBLICA (CLIENTES)
     # ==========================================
-    @st.dialog("🔐 Acesso Restrito (Dono)")
-    def modal_login():
-        with st.form("login_form"):
-            usuario = st.text_input("Usuário")
-            senha = st.text_input("Senha", type="password")
-            if st.form_submit_button("Entrar", type="primary", use_container_width=True):
-                if usuario == "joel" and senha == "531735":
-                    st.session_state.logged_in = True
-                    controller.set("auth_token", "hortifrut_admin_ok", max_age=31536000)
-                    import time
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.error("Usuário ou senha incorretos")
-
     st.markdown("<h1 style='text-align: center; color: #27ae60; font-size: 50px; margin-bottom: 0;'>Hortifruti J & M 🍎</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 20px; color: #7f8c8d;'>Seja muito bem-vindo! Confira nossos produtos fresquinhos:</p>", unsafe_allow_html=True)
     st.markdown("---")
