@@ -584,6 +584,14 @@ else:
         max-width: 100% !important;
     }
     
+    /* Responsividade para Celulares */
+    @media (max-width: 768px) {
+        .block-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
+    }
+    
     /* Imagem menor para caber mais na tela */
     .blend-img {
         max-width: 100%; 
@@ -592,11 +600,30 @@ else:
         border-radius: 5px;
     }
     
-    /* Borda de 3px para as caixas de produtos */
-    div[data-testid="stVerticalBlockBorderWrapper"] > div {
-        border-width: 3px !important;
-        border-radius: 10px !important;
-        padding: 0.8rem !important;
+    /* Grid CSS Responsivo para a Vitrine (muito superior as colunas nativas) */
+    .vitrine-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 15px;
+        width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+        .vitrine-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+    }
+    
+    .vitrine-card {
+        border: 3px solid rgba(128, 128, 128, 0.2);
+        border-radius: 10px;
+        padding: 0.8rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
+        background-color: transparent;
     }
     </style>
     ''', unsafe_allow_html=True)
