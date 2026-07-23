@@ -98,7 +98,7 @@
    ================================================================= */
 .btn-tema,
 [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button {
-    position: fixed !important;
+    position: fixed;
     top: 12px !important;
     right: 12px !important;
     left: auto !important;
@@ -119,6 +119,7 @@
    RESPONSIVIDADE — Celulares
    ================================================================= */
 @media (max-width: 768px) {
+
     .btn-admin,
     [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button {
         top: 8px !important;
