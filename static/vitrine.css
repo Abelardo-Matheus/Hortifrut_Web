@@ -1,3 +1,20 @@
+/* ===== CABEÇALHO: VÍDEO LOGO ===== */
+/* O container se adapta exatamente ao tamanho do vídeo */
+.video-container {
+    width: 100%;
+    line-height: 0;          /* remove espaço fantasma abaixo do vídeo */
+    overflow: hidden;
+}
+
+/* O vídeo sempre estica 100% da largura; a altura é proporcional ao vídeo */
+.logo-video {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+/* ===== LAYOUT GERAL ===== */
 /* Expandir a tela mantendo-a centralizada e sem encostar no scroll */
 .block-container {
     padding-top: 2rem !important;
