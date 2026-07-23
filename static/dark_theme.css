@@ -1,0 +1,21 @@
+img, iframe { 
+    border-radius: 10px;
+}
+.video-container {
+    background-color: #0e1117;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-top: -80px;
+    margin-bottom: 5px;
+    height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+.logo-video {
+    mix-blend-mode: screen;
+    width: 100vw;
+    height: 70%;
+    object-fit: cover;
+}

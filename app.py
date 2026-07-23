@@ -22,7 +22,6 @@ if not st.session_state.logged_in:
     auth = controller.get("auth_token")
     if auth == "hortifrut_admin_ok":
         st.session_state.logged_in = True
-        # st.rerun()
 
 @st.dialog("🔐 Acesso Restrito (Dono)")
 def modal_login():
@@ -62,108 +61,20 @@ with col_btn2:
         st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
 
-if st.session_state.light_mode:
-    css_theme = '''
-        .stApp { 
-            filter: invert(1) hue-rotate(180deg); 
-        }
-        .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
-            background-color: #000000 !important;
-        }
-        img, iframe { 
-            filter: invert(1) hue-rotate(180deg); 
-            border-radius: 10px;
-        }
-        .video-container {
-            filter: invert(1) hue-rotate(180deg); 
-            background-color: #0e1117;
-            width: 100vw;
-            margin-left: calc(-50vw + 50%);
-            margin-top: -80px;
-            margin-bottom: 5px;
-            height: 350px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        .logo-video {
-            mix-blend-mode: screen;
-            width: 100vw;
-            height: 70%;
-            object-fit: cover;
-        }
-    '''
-else:
-    css_theme = '''
-        img, iframe { 
-            border-radius: 10px;
-        }
-        .video-container {
-            background-color: #0e1117;
-            width: 100vw;
-            margin-left: calc(-50vw + 50%);
-            margin-top: -80px;
-            margin-bottom: 5px;
-            height: 350px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        .logo-video {
-            mix-blend-mode: screen;
-            width: 100vw;
-            height: 70%;
-            object-fit: cover;
-        }
-    '''
+def load_css(file_name):
+    import os
+    path = os.path.join(os.path.dirname(__file__), "static", file_name)
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
-css_theme += '''
-        [data-testid="stHeader"] { display: none !important; }
-        [data-testid="stDecoration"] { display: none !important; }
-        .block-container { padding-top: 0rem !important; margin-top: 0 !important; }
-        /* Flutuar os botões sobre o vídeo e forçar a largura total da tela (100vw) */
-        [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
-            position: absolute !important;
-            top: 15px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            width: 100vw !important;
-            margin: 0 !important;
-            padding: 0 25px !important;
-            box-sizing: border-box !important;
-            z-index: 999999 !important;
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: flex-start !important;
-            pointer-events: none !important;
-        }
-        [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"] {
-            position: static !important;
-            width: auto !important;
-            min-width: 0 !important;
-            flex: 0 0 auto !important;
-            pointer-events: auto !important;
-        }
-        [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"]:nth-child(2) {
-            display: flex !important;
-            justify-content: flex-end !important;
-        }
-        @media (max-width: 768px) {
-            [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
-                padding: 0 10px !important;
-            }
-        }
-        [data-testid="stHorizontalBlock"]:has(#btn-anchor) button {
-            margin: 0 !important;
-        }
-        [data-testid="stElementContainer"]:has(#btn-anchor) {
-            display: none !important;
-        }
-'''
+def load_html(file_name):
+    import os
+    path = os.path.join(os.path.dirname(__file__), "static", file_name)
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
+css_theme = load_css("light_theme.css") if st.session_state.light_mode else load_css("dark_theme.css")
+css_theme += load_css("common.css")
 st.markdown(f'<style>{css_theme}</style>', unsafe_allow_html=True)
 
 def render_admin():
@@ -722,108 +633,12 @@ else:
     # VITRINE PÚBLICA (CLIENTES)
     # ==========================================
     
-    video_html = """
-    <div class="video-container">
-        <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova.mp4" autoplay muted playsinline></video>
-    </div>
-    """
-    st.markdown(video_html, unsafe_allow_html=True)
-    
+    st.markdown(load_html("vitrine_video.html"), unsafe_allow_html=True)
     
     produtos = db.get_produtos()
     
     # CSS para as imagens da vitrine
-    st.markdown('''
-    <style>
-    /* Expandir a tela mantendo-a centralizada e sem encostar no scroll */
-    .block-container {
-        padding-top: 2rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-        max-width: 100% !important;
-    }
-    
-    /* Responsividade para Celulares */
-    @media (max-width: 768px) {
-        .block-container {
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-        }
-    }
-    
-    /* Imagem menor para caber mais na tela */
-    .blend-img {
-        max-width: 100%; 
-        max-height: 120px; 
-        object-fit: contain; 
-        border-radius: 5px;
-    }
-    
-    /* Grid CSS Responsivo para a Vitrine (muito superior as colunas nativas) */
-    .vitrine-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 15px;
-        width: 100%;
-    }
-    
-    @media (max-width: 768px) {
-        .vitrine-grid {
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-        }
-    }
-    
-    .vitrine-card {
-        border: 3px solid rgba(128, 128, 128, 0.2);
-        border-radius: 10px;
-        padding: 0.8rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        box-sizing: border-box;
-        background-color: transparent;
-    }
-    .vitrine-img-container {
-        display: flex; justify-content: center; height: 120px; align-items: center; margin-bottom: 10px;
-    }
-    .sem-imagem {
-        color: #ccc;
-    }
-    .vitrine-nome {
-        height: 48px; overflow: hidden; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-bottom: 5px; text-align: center;
-    }
-    .vitrine-preco {
-        display: flex; justify-content: center; align-items: center; font-size: 20px; margin-bottom: 5px; color: #27ae60; text-align: center;
-    }
-    .vitrine-preco span {
-        font-size:14px; color:#7f8c8d; margin-left: 5px;
-    }
-    .vitrine-estoque {
-        text-align: center; font-weight: bold; font-size: 14px;
-    }
-    .disp { color: #2980b9; }
-    .esgot { color: #e74c3c; }
-    
-    @media (max-width: 768px) {
-        .vitrine-grid {
-            /* Força 3 colunas em telas pequenas, independente de quão pequenas sejam */
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 5px;
-        }
-        .vitrine-card {
-            padding: 0.3rem !important;
-            border-width: 2px !important;
-        }
-        .blend-img { max-height: 80px; }
-        .vitrine-img-container { height: 80px; margin-bottom: 5px; }
-        .vitrine-nome { font-size: 13px !important; height: 34px !important; line-height: 1.2; }
-        .vitrine-preco { font-size: 14px !important; }
-        .vitrine-preco span { font-size: 11px !important; margin-left: 2px; }
-        .vitrine-estoque { font-size: 11px !important; }
-    }
-    </style>
-    ''', unsafe_allow_html=True)
+    st.markdown(f'<style>{load_css("vitrine.css")}</style>', unsafe_allow_html=True)
     
     # Dialog para solicitar produto
     @st.dialog("Qual produto você não encontrou?")
