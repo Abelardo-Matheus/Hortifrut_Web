@@ -8,12 +8,12 @@
     display: block;
 }
 
-/* Vídeo ocupa 100% da largura; altura proporcional mas limitada pelo container */
+/* Vídeo encaixa perfeitamente na caixa sem cortar */
 .logo-video {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
-    object-fit: cover;
+    object-fit: contain;
     max-height: 180px;
 }
 
