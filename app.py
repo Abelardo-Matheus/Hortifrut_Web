@@ -63,16 +63,27 @@ with col_btn2:
         st.rerun()
 
 if st.session_state.light_mode:
-    st.markdown('''
-        <style>
-            .stApp { 
-                filter: invert(1) hue-rotate(180deg); 
-            }
-            img, video, iframe, .blend-img, .vitrine-img-container { 
-                filter: invert(1) hue-rotate(180deg); 
-            }
-        </style>
-    ''', unsafe_allow_html=True)
+    css_theme = '''
+        .stApp { 
+            filter: invert(1) hue-rotate(180deg); 
+        }
+        img, video, iframe { 
+            filter: invert(1) hue-rotate(180deg); 
+            background-color: white !important;
+            border-radius: 10px;
+            padding: 5px;
+        }
+    '''
+else:
+    css_theme = '''
+        img, video, iframe { 
+            background-color: white !important;
+            border-radius: 10px;
+            padding: 5px;
+        }
+    '''
+
+st.markdown(f'<style>{css_theme}</style>', unsafe_allow_html=True)
 
 def render_admin():
     
