@@ -48,8 +48,8 @@ with tab_pdv:
                 if i + j < len(prods_filtrados):
                     p = prods_filtrados[i+j]
                     with cols[j]:
-                        # Container de tamanho fixo com borda para agrupar TUDO (Native Streamlit)
-                        with st.container(height=360, border=True):
+                        # Container com borda (Altura automática que evita scroll, mas fica igual porque o conteúdo tem altura fixa)
+                        with st.container(border=True):
                             # Imagem com altura controlada e centralizada
                             if p.get("imagem_url"):
                                 st.markdown(f'<div style="display: flex; justify-content: center; height: 100px; align-items: center; margin-bottom: 5px;"><img src="{p["imagem_url"]}" style="max-width: 100%; max-height: 100px; object-fit: contain; border-radius: 5px;"></div>', unsafe_allow_html=True)

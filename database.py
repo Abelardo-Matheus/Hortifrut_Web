@@ -276,10 +276,22 @@ def registrar_retirada_casa(itens):
         return False
 
 def get_retiradas_mes(ano, mes):
-    # Supondo que data_hora ISO contém "YYYY-MM"
-    prefixo_mes = f"{ano}-{mes:02d}"
+    # Para campos timestamp no Postgres/Supabase, não podemos usar .like()
+    # Devemos usar maior ou igual (gte) ao primeiro dia do mês, 
+    # e menor que (lt) o primeiro dia do próximo mês.
+    data_inicio = f"{ano}-{mes:02d}-01T00:00:00.000Z"
+    
+    if mes == 12:
+        prox_ano = ano + 1
+        prox_mes = 1
+    else:
+        prox_ano = ano
+        prox_mes = mes + 1
+        
+    data_fim = f"{prox_ano}-{prox_mes:02d}-01T00:00:00.000Z"
+    
     try:
-        resp = supabase.table("retiradas_casa").select("*, produtos(nome, unidade_medida)").like("data_hora", f"{prefixo_mes}%").order("data_hora", desc=True).execute()
+        resp = supabase.table("retiradas_casa").select("*, produtos(nome, unidade_medida)").gte("data_hora", data_inicio).lt("data_hora", data_fim).order("data_hora", desc=True).execute()
         return resp.data
     except Exception as e:
         st.error(f"Erro ao buscar retiradas: {e}")

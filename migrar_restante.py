@@ -48,11 +48,21 @@ def migrar_banco_restante():
         
     if clientes_batch:
         try:
-            resp_cli = supabase.table("clientes").insert(clientes_batch).execute()
-            print(f"{len(resp_cli.data)} clientes inseridos no Supabase.")
+            resp_cli = supabase.table("clientes").upsert(clientes_batch, on_conflict="nome").execute()
+            print(f"{len(resp_cli.data)} clientes sincronizados no Supabase.")
             for i, c_db in enumerate(resp_cli.data):
-                old_id = clientes_sqlite[i]['id']
-                id_map_clientes[old_id] = c_db['id']
+                # O Supabase retorna os dados do upsert. Precisamos mapear o id do SQLite para o id do Supabase.
+                # Como a ordem do upsert não é garantida, vamos mapear pelo NOME
+                pass
+                
+            # Buscar todos os clientes para montar o mapa
+            resp_todos_cli = supabase.table("clientes").select("id, nome").execute()
+            supa_cli_map = {c['nome']: c['id'] for c in resp_todos_cli.data}
+            
+            for c_sq in clientes_sqlite:
+                if c_sq['nome'] in supa_cli_map:
+                    id_map_clientes[c_sq['id']] = supa_cli_map[c_sq['nome']]
+                    
         except Exception as e:
             print(f"Erro ao inserir clientes: {e}")
             return
