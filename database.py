@@ -348,3 +348,37 @@ def save_balanco_mes(ano, mes, estoque_inicial, estoque_final):
     except Exception as e:
         st.error(f"Erro ao salvar balanço: {e}")
         return False
+
+# ==========================================
+# SOLICITAÇÕES DE PRODUTOS
+# ==========================================
+
+def get_solicitacoes():
+    try:
+        resp = supabase.table('solicitacoes').select('*').order('data_solicitacao', desc=True).execute()
+        return resp.data
+    except Exception as e:
+        print('Erro ao buscar solicitacoes:', e)
+        return []
+
+def add_solicitacao(nome_produto, nome_cliente, telefone):
+    try:
+        data = {
+            'nome_produto': nome_produto,
+            'nome_cliente': nome_cliente,
+            'telefone': telefone,
+            'status': 'Pendente'
+        }
+        supabase.table('solicitacoes').insert(data).execute()
+        return True
+    except Exception as e:
+        print('Erro ao adicionar solicitacao:', e)
+        return False
+
+def update_solicitacao_status(req_id, novo_status):
+    try:
+        supabase.table('solicitacoes').update({'status': novo_status}).eq('id', req_id).execute()
+        return True
+    except Exception as e:
+        print('Erro ao atualizar solicitacao:', e)
+        return False
