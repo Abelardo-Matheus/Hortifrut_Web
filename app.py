@@ -39,8 +39,8 @@ def modal_login():
             else:
                 st.error("Usuário ou senha incorretos")
 
-if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = False
+if "light_mode" not in st.session_state:
+    st.session_state.light_mode = False
 
 col_btn1, col_btn2, _ = st.columns([1, 1, 15])
 with col_btn1:
@@ -56,17 +56,16 @@ with col_btn1:
             modal_login()
 
 with col_btn2:
-    tema_icon = "☀️" if st.session_state.dark_mode else "🌙"
+    tema_icon = "🌙" if st.session_state.light_mode else "☀️"
     if st.button(tema_icon, help="Mudar Tema"):
-        st.session_state.dark_mode = not st.session_state.dark_mode
+        st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
 
-if st.session_state.dark_mode:
+if st.session_state.light_mode:
     st.markdown('''
         <style>
-            html, body, [data-testid="stAppViewContainer"] { 
-                filter: invert(1) hue-rotate(180deg) brightness(1.05); 
-                background-color: #121212 !important; 
+            [data-testid="stAppViewContainer"], [data-testid="stHeader"] { 
+                filter: invert(1) hue-rotate(180deg); 
             }
             img, video, iframe, .blend-img, .vitrine-img-container { 
                 filter: invert(1) hue-rotate(180deg); 
