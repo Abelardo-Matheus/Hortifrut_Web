@@ -1,42 +1,41 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!-- 
+  ========================================================
+  ARQUIVO PRINCIPAL DE EDIÇÃO DA VITRINE (PÚBLICO)
+  ========================================================
+  Este arquivo controla o layout e a aparência do site dos clientes.
+  O app.py (Streamlit) vai ler este arquivo e exibi-lo online.
+-->
 
-<head>
-    <!-- ================= 1. ESTILOS (CSS) ================= -->
-    <style>
-        /* O Streamlit irá injetar os temas originais (claro/escuro) e vitrine.css aqui: */
-        {css_theme}
-        {vitrine_css}
-    </style>
-</head>
+<!-- ================= 1. CABEÇALHO ("HEAD") ================= -->
+<!-- Configurações de estilos (CSS) -->
+<style>
+    /* O Streamlit irá injetar os temas originais (claro/escuro) e vitrine.css aqui: */
+    {css_theme}
+    {vitrine_css}
+</style>
 
-<body>
-    <!-- ================= 2. CABEÇALHO (TOPO DO SITE) ================= -->
-    <!-- Aqui fica o vídeo, logo e a área dos botões de busca -->
-    <header>
-        <div class="video-container">
-            <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova.mp4" autoplay muted playsinline></video>
-        </div>
-        <!-- Espaçador para empurrar o conteúdo abaixo do vídeo absoluto -->
-        <div style="height: 360px; width: 100%;"></div>
+<!-- Aqui fica o vídeo, logo e a área antes da busca -->
+<header>
+    <div class="video-container">
+        <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova.mp4" autoplay muted playsinline></video>
+    </div>
+    <!-- Espaçador para empurrar o conteúdo abaixo do vídeo absoluto -->
+    <div style="height: 360px; width: 100%;"></div>
 
-        <!-- 
-          A tag abaixo insere a busca interativa e o botão "Não achou?" nativos do app.py.
-          NÃO APAGUE ESTA LINHA:
-        -->
-        <!-- STREAMLIT_WIDGETS -->
-    </header>
+    <!-- 
+      A tag abaixo insere a busca interativa e o botão "Não achou?" nativos do app.py.
+      NÃO APAGUE ESTA LINHA:
+    -->
+    <!-- STREAMLIT_WIDGETS -->
+</header>
 
-    <!-- ================= 3. CORPO DO SITE (RESTANTE) ================= -->
-    <!-- Aqui fica a grade com todos os produtos -->
-    <main>
-        <div class="vitrine-grid">
-            {html_cards}
-        </div>
-    </main>
-
-</body>
-</html>
+<!-- ================= 2. CORPO DO SITE ("BODY") ================= -->
+<!-- Aqui fica a grade com todos os produtos (Restante do site) -->
+<main>
+    <div class="vitrine-grid">
+        {html_cards}
+    </div>
+</main>
 
 <!-- 
   ========================================================
