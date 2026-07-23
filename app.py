@@ -63,7 +63,7 @@ css_theme += load_css("common.css")
 def render_admin():
     
     st.markdown(f"<style>{css_theme}</style><div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
-    st.title("🍎 Gestão Hortifruti Online")
+    st.title("🍎 Gestão Hortifruti J&M")
     
     # Carregar produtos do banco
     produtos = db.get_produtos()
@@ -265,9 +265,6 @@ def render_admin():
                     else:
                         st.error("Preencha os campos obrigatórios (Nome e Preço de Venda).")
                         
-        st.markdown("### 📋 Tabela de Produtos (Edite diretamente na tabela)")
-        st.markdown("### 📋 Gerenciar Produtos")
-        
         busca_estoque = st.text_input("🔍 Buscar Produto no Estoque", placeholder="Digite o nome ou código do produto...")
         
         prods_f = produtos
