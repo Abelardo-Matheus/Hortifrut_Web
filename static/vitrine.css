@@ -8,12 +8,12 @@
     display: block;
 }
 
-/* Vídeo encaixa perfeitamente na caixa sem cortar */
+/* Vídeo estica para preencher exatamente a caixa (largura + altura) */
 .logo-video {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: contain;
+    object-fit: fill;
     max-height: 180px;
 }
 
