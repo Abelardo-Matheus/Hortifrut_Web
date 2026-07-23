@@ -77,9 +77,7 @@ if st.session_state.light_mode:
 else:
     css_theme = '''
         img, video, iframe { 
-            background-color: white !important;
             border-radius: 10px;
-            padding: 5px;
         }
     '''
 
