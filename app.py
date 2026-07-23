@@ -46,10 +46,7 @@ if "light_mode" not in st.session_state:
 st.markdown("""
 <style>
 [data-testid="stHorizontalBlock"]:first-of-type {
-    position: absolute !important;
-    top: -9999px !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    display: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
