@@ -79,14 +79,18 @@ if st.session_state.light_mode:
             background-color: #0e1117;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            height: 200px;
             display: flex;
             justify-content: center;
+            overflow: hidden;
         }
         .logo-video {
             mix-blend-mode: screen;
-            width: 100%;
-            max-width: 800px;
+            width: 100vw;
+            height: 100%;
+            object-fit: cover;
         }
     '''
 else:
@@ -98,14 +102,18 @@ else:
             background-color: #0e1117;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            height: 200px;
             display: flex;
             justify-content: center;
+            overflow: hidden;
         }
         .logo-video {
             mix-blend-mode: screen;
-            width: 100%;
-            max-width: 800px;
+            width: 100vw;
+            height: 100%;
+            object-fit: cover;
         }
     '''
 
@@ -675,7 +683,6 @@ else:
     """
     st.markdown(video_html, unsafe_allow_html=True)
     
-    st.markdown("---")
     
     produtos = db.get_produtos()
     
