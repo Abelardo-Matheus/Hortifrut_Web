@@ -42,7 +42,7 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-st.markdown("<div style='margin-top: 75px;'></div>", unsafe_allow_html=True)
+st.markdown('<div id="btn-anchor"></div>', unsafe_allow_html=True)
 col_btn1, col_btn2, _ = st.columns([1, 1, 15])
 with col_btn1:
     if st.session_state.logged_in:
@@ -79,9 +79,9 @@ if st.session_state.light_mode:
             background-color: #0e1117;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
-            margin-top: 5px;
+            margin-top: 0px;
             margin-bottom: 5px;
-            height: 200px;
+            height: 350px;
             display: flex;
             justify-content: center;
             overflow: hidden;
@@ -102,9 +102,9 @@ else:
             background-color: #0e1117;
             width: 100vw;
             margin-left: calc(-50vw + 50%);
-            margin-top: 5px;
+            margin-top: 0px;
             margin-bottom: 5px;
-            height: 200px;
+            height: 350px;
             display: flex;
             justify-content: center;
             overflow: hidden;
@@ -117,12 +117,26 @@ else:
         }
     '''
 
+css_theme += '''
+        [data-testid="stHeader"] { display: none !important; }
+        .block-container { padding-top: 0rem !important; margin-top: 0 !important; }
+        
+        /* Flutuar os botões sobre o vídeo */
+        [data-testid="stElementContainer"]:has(#btn-anchor) + [data-testid="stElementContainer"] {
+            position: absolute !important;
+            top: 15px;
+            left: 15px;
+            z-index: 999;
+            width: auto !important;
+            min-width: 150px;
+        }
+'''
+
 st.markdown(f'<style>{css_theme}</style>', unsafe_allow_html=True)
 
 def render_admin():
     
-    
-    
+    st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
     st.title("🍎 Gestão Hortifruti Online")
     
     # Carregar produtos do banco
