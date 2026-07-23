@@ -26,11 +26,9 @@
     perspective: none;
 }
 
-/* Remove position:relative APENAS nos wrappers DENTRO do primeiro bloco de botões */
-[data-testid="stHorizontalBlock"]:first-of-type,
+/* Remove position:relative nos wrappers internos do primeiro bloco de botões */
 [data-testid="stHorizontalBlock"]:first-of-type [data-testid="stVerticalBlock"],
 [data-testid="stHorizontalBlock"]:first-of-type [data-testid="stElementContainer"],
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"],
 [data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"],
 [data-testid="stHorizontalBlock"]:first-of-type .stButton,
 .st-emotion-cache-c2ku3e {
@@ -39,27 +37,47 @@
 
 /* =================================================================
    WRAPPER DOS BOTÕES FLUTUANTES
-   Div que engloba os dois botões (Admin + Tema).
-   Edite aqui para mudar o posicionamento do bloco inteiro.
+   ─────────────────────────────────────────────────────────────────
+   O WRAPPER é fixo no topo ocupando 100% da largura da tela.
+   Os botões ficam em posição RELATIVA dentro dele (flexbox).
+   Assim justify-content: space-between funciona perfeitamente:
+   btn-admin → esquerda    btn-tema → direita
    ================================================================= */
 .botoes-wrapper {
-    /* Container invisível — só os botões ficam visíveis */
-    height: 0px !important;
-    min-height: 0px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 12px !important;
     margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
+    box-sizing: border-box !important;
+    z-index: 999999 !important;
+    /* Transparente para não bloquear cliques no conteúdo abaixo */
+    pointer-events: none;
+    background: transparent;
+}
+
+/* Cada coluna ocupa apenas o espaço do seu botão */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"] {
     position: static !important;
+    pointer-events: all;
+    flex: 0 !important;
 }
 
 /* =================================================================
-   BOTÃO ADMIN (🔐 / 🔓) — lado esquerdo
-   Edite aqui para mudar o estilo/posição do botão de admin.
+   BOTÃO ADMIN (🔐 / 🔓) — alinhado à ESQUERDA do wrapper
+   Edite aqui para mudar o estilo do botão de admin.
    ================================================================= */
 .btn-admin {
-    position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
     right: auto !important;
     width: 42px !important;
     height: 42px !important;
@@ -67,40 +85,21 @@
     min-height: 42px !important;
     padding: 0 !important;
     margin: 0 !important;
-    z-index: 999999 !important;
     border-radius: 8px;
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
+    pointer-events: all;
 }
 
 /* =================================================================
-   BOTÃO TEMA (☀️ / 🌙) — lado direito
-   Edite aqui para mudar o estilo/posição do botão de tema.
+   BOTÃO TEMA (☀️ / 🌙) — alinhado à DIREITA do wrapper
+   Edite aqui para mudar o estilo do botão de tema.
    ================================================================= */
 .btn-tema {
     position: relative !important;
-    top: 12px !important;
-    right: 12px !important;
+    top: auto !important;
     left: auto !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    z-index: 999999 !important;
-    border-radius: 8px;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-}
-
-/* Fallback via seletores Streamlit (caso o JS não aplique as classes) */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button {
-    position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
     right: auto !important;
     width: 42px !important;
     height: 42px !important;
@@ -108,43 +107,86 @@
     min-height: 42px !important;
     padding: 0 !important;
     margin: 0 !important;
-    z-index: 999999 !important;
     border-radius: 8px;
     font-size: 18px;
     line-height: 1;
+    cursor: pointer;
+    pointer-events: all;
 }
 
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button {
+/* =================================================================
+   FALLBACK (seletores Streamlit — caso o JS não aplique as classes)
+   ================================================================= */
+
+/* Wrapper fallback */
+[data-testid="stHorizontalBlock"]:first-of-type {
     position: fixed !important;
-    top: 12px !important;
-    right: 12px !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 10px 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    z-index: 999999 !important;
+    pointer-events: none;
+    background: transparent;
+    overflow: visible !important;
+}
+
+/* Botão esquerdo (coluna 1) */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button {
+    position: relative !important;
+    top: auto !important;
     left: auto !important;
+    right: auto !important;
     width: 42px !important;
     height: 42px !important;
     min-width: 42px !important;
     min-height: 42px !important;
     padding: 0 !important;
     margin: 0 !important;
-    z-index: 999999 !important;
     border-radius: 8px;
     font-size: 18px;
     line-height: 1;
+    pointer-events: all;
 }
 
-/* Responsividade para celulares */
+/* Botão direito (coluna 2) */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+    pointer-events: all;
+}
+
+/* =================================================================
+   RESPONSIVIDADE — Celulares
+   ================================================================= */
 @media (max-width: 768px) {
-    .btn-admin {
-        top: 8px !important;
-        left: 8px !important;
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
+    .botoes-wrapper,
+    [data-testid="stHorizontalBlock"]:first-of-type {
+        padding: 8px !important;
     }
 
-    .btn-tema {
-        top: 8px !important;
-        right: 8px !important;
+    .btn-admin,
+    .btn-tema,
+    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"] button {
         width: 36px !important;
         height: 36px !important;
         min-width: 36px !important;
