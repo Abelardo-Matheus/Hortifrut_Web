@@ -41,32 +41,25 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-if st.session_state.logged_in:
-    if st.button("🔓", help="Sair do Modo Admin"):
-        st.session_state.logged_in = False
-        controller.remove("auth_token")
-        import time
-        time.sleep(0.5)
+col_btn1, col_btn2 = st.columns(2)
+
+with col_btn1:
+    if st.session_state.logged_in:
+        if st.button("🔓", help="Sair do Modo Admin"):
+            st.session_state.logged_in = False
+            controller.remove("auth_token")
+            import time
+            time.sleep(0.5)
+            st.rerun()
+    else:
+        if st.button("🔐", help="Login Administrativo"):
+            modal_login()
+
+with col_btn2:
+    tema_icon = "🌙" if st.session_state.light_mode else "☀️"
+    if st.button(tema_icon, help="Mudar Tema"):
+        st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
-else:
-    if st.button("🔐", help="Login Administrativo"):
-        modal_login()
-
-tema_icon = "🌙" if st.session_state.light_mode else "☀️"
-if st.button(tema_icon, help="Mudar Tema"):
-    st.session_state.light_mode = not st.session_state.light_mode
-    st.rerun()
-
-import streamlit.components.v1 as components
-components.html("""
-<script>
-    const btns = window.parent.document.querySelectorAll('.stButton');
-    if (btns.length >= 2) {
-        btns[0].classList.add('btn-canto-esquerdo');
-        btns[1].classList.add('btn-canto-direito');
-    }
-</script>
-""", height=0)
 
 def load_css(file_name):
     import os
@@ -82,11 +75,10 @@ def load_html(file_name):
 
 css_theme = load_css("light_theme.css") if st.session_state.light_mode else load_css("dark_theme.css")
 css_theme += load_css("common.css")
-st.markdown(f'<style>{css_theme}</style>', unsafe_allow_html=True)
 
 def render_admin():
     
-    st.markdown("<div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
+    st.markdown(f"<style>{css_theme}</style><div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
     st.title("🍎 Gestão Hortifruti Online")
     
     # Carregar produtos do banco
@@ -640,12 +632,11 @@ else:
     # VITRINE PÚBLICA (CLIENTES)
     # ==========================================
     
-    st.markdown(load_html("vitrine_video.html"), unsafe_allow_html=True)
+    video_html = load_html("vitrine_video.html")
+    vitrine_css = load_css("vitrine.css")
+    st.markdown(f'<style>{css_theme}</style>\n<style>{vitrine_css}</style>\n{video_html}', unsafe_allow_html=True)
     
     produtos = db.get_produtos()
-    
-    # CSS para as imagens da vitrine
-    st.markdown(f'<style>{load_css("vitrine.css")}</style>', unsafe_allow_html=True)
     
     # Dialog para solicitar produto
     @st.dialog("Qual produto você não encontrou?")
