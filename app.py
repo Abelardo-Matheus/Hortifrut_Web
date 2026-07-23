@@ -29,28 +29,17 @@ if not st.session_state.logged_in:
 def render_admin():
     
     
-    if st.session_state.get("fechar_sidebar", False):
-        import streamlit.components.v1 as components
-        components.html('''
-            <script>
-                setTimeout(() => {
-                    const doc = window.parent.document;
-                    // Procura o botão de toggle da sidebar que fica no header
-                    const toggleBtn = doc.querySelector('[data-testid="collapsedControl"]');
-                    if (toggleBtn) {
-                        toggleBtn.click();
-                    } else {
-                        // Tenta abordagem genérica procurando SVGs que indicam fechar
-                        const buttons = Array.from(doc.querySelectorAll('button'));
-                        const closeBtn = buttons.find(b => b.getAttribute('aria-expanded') === 'true' || b.getAttribute('data-testid') === 'baseButton-header');
-                        if(closeBtn) closeBtn.click();
-                    }
-                }, 100);
-            </script>
-        ''', height=0, width=0)
-        st.session_state.fechar_sidebar = False
     
     st.title("🍎 Gestão Hortifruti Online")
+    col_t1, col_t2 = st.columns([4, 1])
+    with col_t2:
+        st.write("")
+        if st.button("🚪 Sair", use_container_width=True):
+            st.session_state.logged_in = False
+            controller.remove("auth_token")
+            import time
+            time.sleep(0.5)
+            st.rerun()
     
     # Carregar produtos do banco
     produtos = db.get_produtos()
@@ -543,30 +532,27 @@ def render_admin():
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-with st.sidebar:
-    if not st.session_state.logged_in:
-        st.subheader("🔐 Acesso Restrito (Dono)")
-        usuario = st.text_input("Usuário")
-        senha = st.text_input("Senha", type="password")
-        if st.button("Entrar", type="primary", use_container_width=True):
-            if usuario == "joel" and senha == "531735":
-                st.session_state.logged_in = True
-                st.session_state.fechar_sidebar = True
-                st.rerun()
-            else:
-                st.error("Usuário ou senha incorretos")
-    else:
-        st.success("Você está logado como Admin.")
-        if st.button("🚪 Sair do Sistema", use_container_width=True):
-            st.session_state.logged_in = False
-            st.rerun()
-
 if st.session_state.logged_in:
     render_admin()
 else:
     # ==========================================
     # VITRINE PÚBLICA (CLIENTES)
     # ==========================================
+    @st.dialog("🔐 Acesso Restrito (Dono)")
+    def modal_login():
+        with st.form("login_form"):
+            usuario = st.text_input("Usuário")
+            senha = st.text_input("Senha", type="password")
+            if st.form_submit_button("Entrar", type="primary", use_container_width=True):
+                if usuario == "joel" and senha == "531735":
+                    st.session_state.logged_in = True
+                    controller.set("auth_token", "hortifrut_admin_ok", max_age=31536000)
+                    import time
+                    time.sleep(0.5)
+                    st.rerun()
+                else:
+                    st.error("Usuário ou senha incorretos")
+
     st.markdown("<h1 style='text-align: center; color: #27ae60; font-size: 50px; margin-bottom: 0;'>Hortifruti J & M 🍎</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; font-size: 20px; color: #7f8c8d;'>Seja muito bem-vindo! Confira nossos produtos fresquinhos:</p>", unsafe_allow_html=True)
     st.markdown("---")
@@ -741,3 +727,9 @@ else:
     </div>
     """
     st.markdown(grid_html, unsafe_allow_html=True)
+
+    st.markdown("---")
+    c_end1, c_end2, c_end3 = st.columns([2,1,2])
+    with c_end2:
+        if st.button("🔐 Área Administrativa", use_container_width=True):
+            modal_login()
