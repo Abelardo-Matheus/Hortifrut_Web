@@ -76,6 +76,13 @@ CREATE TABLE balanco_mensal (
     UNIQUE(mes, ano)
 );
 
+-- Tabela de Usuários (Admins)
+CREATE TABLE usuarios (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    usuario TEXT NOT NULL UNIQUE,
+    senha TEXT NOT NULL,
+    criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
 -- ==========================================
 -- 2. Configurações de Segurança RLS 

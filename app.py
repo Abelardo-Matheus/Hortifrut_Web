@@ -32,7 +32,7 @@ def modal_login():
         usuario = st.text_input("Usuário")
         senha = st.text_input("Senha", type="password")
         if st.form_submit_button("Entrar", type="primary", use_container_width=True):
-            if usuario == "joel" and senha == "531735":
+            if db.verificar_login(usuario, senha):
                 st.session_state.logged_in = True
                 st.session_state.show_admin = True
                 controller.set("auth_token", "hortifrut_admin_ok", max_age=31536000)

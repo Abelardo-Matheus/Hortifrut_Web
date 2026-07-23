@@ -20,11 +20,22 @@ def get_supabase_client() -> Client:
         key = os.environ.get("SUPABASE_KEY")
         
     if not url or not key:
-        raise ValueError("Chaves do Supabase não encontradas. Configure o .env ou o st.secrets.")
+        st.error("Erro: Credenciais do Supabase não configuradas!")
+        st.stop()
         
     return create_client(url, key)
 
 supabase = get_supabase_client()
+
+def verificar_login(usuario, senha):
+    try:
+        resp = supabase.table('usuarios').select('*').eq('usuario', usuario).eq('senha', senha).execute()
+        if resp.data and len(resp.data) > 0:
+            return True
+        return False
+    except Exception as e:
+        print('Erro ao verificar login:', e)
+        return False
 
 # ==========================================
 # CRUD DE PRODUTOS
