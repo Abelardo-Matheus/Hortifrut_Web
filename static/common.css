@@ -26,75 +26,59 @@
     perspective: none;
 }
 
-/* Remove position:relative APENAS nos wrappers DENTRO do primeiro bloco de botões
-   (não globalmente — isso quebra tabs, dropdowns e outros componentes do admin) */
+/* Remove position:relative APENAS nos wrappers DENTRO do primeiro bloco de botões */
 [data-testid="stHorizontalBlock"]:first-of-type,
 [data-testid="stHorizontalBlock"]:first-of-type [data-testid="stVerticalBlock"],
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stElementContainer"] {
-    position: static !important;
-}
-
-/* =====================================================
-   OVERRIDE DAS CLASSES CACHE DO STREAMLIT (emotion)
-   Remove o position: relative que quebra o fixed dos botões.
-   ===================================================== */
-
-/* Classe específica identificada */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stElementContainer"],
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"],
+[data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"],
+[data-testid="stHorizontalBlock"]:first-of-type .stButton,
 .st-emotion-cache-c2ku3e {
     position: static !important;
 }
 
-/* Qualquer coluna dentro do primeiro bloco horizontal */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"] {
-    position: static !important;
-}
-
-/* Qualquer wrapper emotion-cache dentro do primeiro bloco */
-[data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"] {
-    position: static !important;
-}
-
-/* Qualquer .stButton wrapper no primeiro bloco */
-[data-testid="stHorizontalBlock"]:first-of-type .stButton {
-    position: static !important;
-}
-
-/* =====================================================
-   BOTÕES FLUTUANTES (Admin + Tema) — FIXOS NA TELA
-   Ficam visíveis em qualquer posição do scroll.
-   Mesmo tamanho, mesma margem, um em cada lado.
-   ===================================================== */
-
-/* Zera o container dos botões para não gerar espaço em branco */
-[data-testid="stHorizontalBlock"]:first-of-type {
+/* =================================================================
+   WRAPPER DOS BOTÕES FLUTUANTES
+   Div que engloba os dois botões (Admin + Tema).
+   Edite aqui para mudar o posicionamento do bloco inteiro.
+   ================================================================= */
+.botoes-wrapper {
+    /* Container invisível — só os botões ficam visíveis */
     height: 0px !important;
     min-height: 0px !important;
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
+    position: static !important;
 }
 
-/* BOTÃO ESQUERDO — Ícone Admin (🔐 / 🔓) */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button,
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) .stButton > button {
+/* =================================================================
+   BOTÃO ADMIN (🔐 / 🔓) — lado esquerdo
+   Edite aqui para mudar o estilo/posição do botão de admin.
+   ================================================================= */
+.btn-admin {
     position: fixed !important;
     top: 12px !important;
     left: 12px !important;
+    right: auto !important;
     width: 42px !important;
     height: 42px !important;
     min-width: 42px !important;
     min-height: 42px !important;
     padding: 0 !important;
-    z-index: 999999 !important;
     margin: 0 !important;
+    z-index: 999999 !important;
     border-radius: 8px;
     font-size: 18px;
     line-height: 1;
+    cursor: pointer;
 }
 
-/* BOTÃO DIREITO — Ícone Tema (☀️ / 🌙) */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button,
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) .stButton > button {
+/* =================================================================
+   BOTÃO TEMA (☀️ / 🌙) — lado direito
+   Edite aqui para mudar o estilo/posição do botão de tema.
+   ================================================================= */
+.btn-tema {
     position: fixed !important;
     top: 12px !important;
     right: 12px !important;
@@ -104,8 +88,44 @@
     min-width: 42px !important;
     min-height: 42px !important;
     padding: 0 !important;
-    z-index: 999999 !important;
     margin: 0 !important;
+    z-index: 999999 !important;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* Fallback via seletores Streamlit (caso o JS não aplique as classes) */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button {
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    right: auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 999999 !important;
+    border-radius: 8px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button {
+    position: fixed !important;
+    top: 12px !important;
+    right: 12px !important;
+    left: auto !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 999999 !important;
     border-radius: 8px;
     font-size: 18px;
     line-height: 1;
@@ -113,8 +133,7 @@
 
 /* Responsividade para celulares */
 @media (max-width: 768px) {
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button,
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) .stButton > button {
+    .btn-admin {
         top: 8px !important;
         left: 8px !important;
         width: 36px !important;
@@ -123,8 +142,7 @@
         min-height: 36px !important;
     }
 
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button,
-    [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) .stButton > button {
+    .btn-tema {
         top: 8px !important;
         right: 8px !important;
         width: 36px !important;

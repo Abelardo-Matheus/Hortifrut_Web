@@ -61,6 +61,37 @@ with col_btn2:
         st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
 
+# Injeta JS que aplica as classes CSS nomeadas nos elementos dos botões gerados pelo Streamlit.
+# Isso permite editar .botoes-wrapper, .btn-admin e .btn-tema no common.css facilmente.
+st.markdown("""
+<script>
+(function aplicarClassesBotoes() {
+    function patch() {
+        const wrapper = document.querySelector('[data-testid="stHorizontalBlock"]');
+        if (!wrapper) return false;
+
+        // Wrapper dos dois botões
+        wrapper.classList.add('botoes-wrapper');
+
+        // Botão Admin (1ª coluna)
+        const col1 = wrapper.querySelector('[data-testid="column"]:nth-child(1) button');
+        if (col1) col1.classList.add('btn-admin');
+
+        // Botão Tema (2ª coluna)
+        const col2 = wrapper.querySelector('[data-testid="column"]:nth-child(2) button');
+        if (col2) col2.classList.add('btn-tema');
+
+        return true;
+    }
+
+    // Tenta imediatamente e novamente após 500ms para garantir que o DOM carregou
+    if (!patch()) {
+        setTimeout(patch, 500);
+    }
+})();
+</script>
+""", unsafe_allow_html=True)
+
 def load_css(file_name):
     import os
     path = os.path.join(os.path.dirname(__file__), "static", file_name)
