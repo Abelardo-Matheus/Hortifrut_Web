@@ -133,4 +133,52 @@
         height: 36px;
         font-size: 17px;
     }
+    
+    .float-wpp {
+        width: 36px;
+        height: 36px;
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .float-wpp img {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* =================================================================
+   WhatsApp Float Button (Vitrine)
+   Mesmo estilo dos botões do topo, mas fixo no canto inferior direito
+   ================================================================= */
+.float-wpp {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(14, 17, 23, 0.80);
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2147483647;
+}
+
+.float-wpp:hover {
+    background: rgba(60, 70, 90, 0.90);
+    transform: scale(1.07);
+}
+
+.float-wpp:active {
+    transform: scale(0.96);
+}
+
+.float-wpp img {
+    width: 26px;
+    height: 26px;
 }
