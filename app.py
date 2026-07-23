@@ -62,43 +62,48 @@ with _col_tema:
         st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
 
-# ── Portal visual (botão box fixo no topo) ──────────────────────────
-# Criado diretamente no document.body, fora de qualquer container do
-# Streamlit. Assim position:fixed funciona sem problemas de stacking.
-_admin_icon = "🔓" if st.session_state.logged_in else "🔐"
-_tema_icon_show = "🌙" if st.session_state.light_mode else "☀️"
+# ── Portal visual — usa components.html() para garantir execução do JS ──
+# st.markdown() com <script> falha em reruns. components.html() executa sempre.
+import streamlit.components.v1 as _components
 
-st.markdown(f"""
+_admin_icon   = "🔓" if st.session_state.logged_in else "🔐"
+_tema_icon_js = "🌙" if st.session_state.light_mode else "☀️"
+
+_components.html(f"""
 <script>
 (function() {{
-    // Remove portal anterior (rerun do Streamlit)
-    var old = document.getElementById('hf-btn-portal');
+    var doc = window.parent.document;
+    
+    // Remove portal anterior
+    var old = doc.getElementById('hf-btn-portal');
     if (old) old.remove();
 
     // Cria a box com os dois botões
-    var portal = document.createElement('div');
+    var portal = doc.createElement('div');
     portal.id = 'hf-btn-portal';
+    // O CSS base já está no common.css, só precisamos do HTML estrutural
     portal.innerHTML =
         '<button id="hf-btn-admin" title="Admin">{_admin_icon}</button>' +
-        '<button id="hf-btn-tema"  title="Tema">{_tema_icon_show}</button>';
-    document.body.appendChild(portal);
+        '<button id="hf-btn-tema"  title="Tema">{_tema_icon_js}</button>';
+    
+    doc.body.appendChild(portal);
 
     // Dispara clique no botão Streamlit correspondente
     function clickSt(n) {{
-        var cols = document.querySelectorAll(
+        var cols = doc.querySelectorAll(
             '[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]'
         );
-        if (cols[n]) {{
+        if (cols && cols[n]) {{
             var btn = cols[n].querySelector('button');
             if (btn) btn.click();
         }}
     }}
 
-    document.getElementById('hf-btn-admin').onclick = function() {{ clickSt(0); }};
-    document.getElementById('hf-btn-tema').onclick  = function() {{ clickSt(1); }};
+    doc.getElementById('hf-btn-admin').onclick = function() {{ clickSt(0); }};
+    doc.getElementById('hf-btn-tema').onclick  = function() {{ clickSt(1); }};
 }})();
 </script>
-""", unsafe_allow_html=True)
+""", height=0, width=0)
 
 def load_css(file_name):
     import os
