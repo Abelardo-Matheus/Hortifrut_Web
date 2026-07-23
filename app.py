@@ -109,9 +109,9 @@ def render_admin():
                                 # Textos nativos do Streamlit (adaptam automaticamente para Claro/Escuro sem sumir)
                                 # Usa altura fixa de 45px e corta com "..." se passar de 2 linhas
                                 nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px;">{nome_curto}</div>', unsafe_allow_html=True)
-                                st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
-                                st.caption(f"Estoque: {p['quantidade_estoque']}")
+                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px; text-align: center;">{nome_curto}</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
                                 
                                 # Formulario de adição dentro do mesmo container
                                 qtd = st.number_input("Quantidade", min_value=0.01, value=1.00, step=1.0, key=f"qtd_{p['id']}", label_visibility="collapsed")
@@ -287,9 +287,9 @@ def render_admin():
                                     st.markdown('<div style="height: 105px; display:flex; align-items:center; justify-content:center; border-radius:5px; opacity: 0.5;">Sem Foto</div>', unsafe_allow_html=True)
                                 
                                 nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px;">{nome_curto}</div>', unsafe_allow_html=True)
-                                st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
-                                st.caption(f"Estoque: {p['quantidade_estoque']} {p.get('unidade_medida', 'Un')}")
+                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px; text-align: center;">{nome_curto}</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
+                                st.markdown(f'<div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
                                 
                                 with st.popover("✏️ Editar", use_container_width=True):
                                     with st.form(f"form_edit_{p['id']}"):
