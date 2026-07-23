@@ -9,32 +9,36 @@
 <!-- ================= 1. CABEÇALHO ("HEAD") ================= -->
 <!-- Configurações de estilos (CSS) -->
 <style>
-    /* O Streamlit irá injetar os temas originais (claro/escuro) e vitrine.css aqui: */
-    {css_theme}
-    {vitrine_css}
+  /* O Streamlit irá injetar os temas originais (claro/escuro) e vitrine.css aqui: */
+    {
+    css_theme
+  }
+
+    {
+    vitrine_css
+  }
 </style>
 
 <!-- Aqui fica o vídeo, logo e a área antes da busca -->
 <header>
-    <div class="video-container">
-        <video class="logo-video" src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova.mp4" autoplay muted playsinline></video>
-    </div>
-    <!-- Espaçador para empurrar o conteúdo abaixo do vídeo absoluto -->
-    <div style="height: 360px; width: 100%;"></div>
+  <div class="video-container">
+    <video class="logo-video"
+      src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova.mp4" autoplay muted
+      playsinline></video>
+  </div>
+  <!-- Espaçador para empurrar o conteúdo abaixo do vídeo absoluto -->
+  <div style="height: 360px; width: 100%;"></div>
 
-    <!-- 
-      A tag abaixo insere a busca interativa e o botão "Não achou?" nativos do app.py.
-      NÃO APAGUE ESTA LINHA:
-    -->
-    <!-- STREAMLIT_WIDGETS -->
+
+  <!-- STREAMLIT_WIDGETS -->
 </header>
 
 <!-- ================= 2. CORPO DO SITE ("BODY") ================= -->
 <!-- Aqui fica a grade com todos os produtos (Restante do site) -->
 <main>
-    <div class="vitrine-grid">
-        {html_cards}
-    </div>
+  <div class="vitrine-grid">
+    {html_cards}
+  </div>
 </main>
 
 <!-- 
@@ -44,9 +48,9 @@
 -->
 <!-- TEMPLATE_CARD_PRODUTO -->
 <div class="vitrine-card">
-    {img_html}
-    <div class="vitrine-nome">{nome_curto}</div>
-    <div class="vitrine-preco"><b>R$ {preco_venda}</b></div>
-    {estoque_html}
+  {img_html}
+  <div class="vitrine-nome">{nome_curto}</div>
+  <div class="vitrine-preco"><b>R$ {preco_venda}</b></div>
+  {estoque_html}
 </div>
 <!-- FIM_TEMPLATE_CARD_PRODUTO -->
