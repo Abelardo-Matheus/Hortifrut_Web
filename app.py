@@ -41,22 +41,12 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-# Oculta instantaneamente os botões nativos para evitar que eles "pisquem" na tela
-# antes do CSS principal carregar.
-st.markdown("""
-<style>
-[data-testid="stHorizontalBlock"]:first-of-type {
-    display: none !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ── Botões funcionais do Streamlit (ficam ocultos via CSS) ───────────
-
-# O clique real é disparado pelo portal JS abaixo.
-_col_admin, _col_tema = st.columns([1, 1])
-
-with _col_admin:
+# ── Botões funcionais do Streamlit (ficam ocultos via JS/Marker) ────
+# Usamos um container com um marcador único para que o Javascript ache e
+# esconda APENAS estes botões específicos, resolvendo qualquer conflito.
+with st.container():
+    st.markdown("<div id='hf-hidden-btns-marker' style='display:none'></div>", unsafe_allow_html=True)
+    
     if st.session_state.logged_in:
         if st.button("🔓", help="Sair do Modo Admin", key="st_btn_admin"):
             st.session_state.logged_in = False
@@ -67,14 +57,12 @@ with _col_admin:
         if st.button("🔐", help="Login Administrativo", key="st_btn_admin"):
             modal_login()
 
-with _col_tema:
     _tema_icon = "🌙" if st.session_state.light_mode else "☀️"
     if st.button(_tema_icon, help="Mudar Tema", key="st_btn_tema"):
         st.session_state.light_mode = not st.session_state.light_mode
         st.rerun()
 
-# ── Portal visual — usa components.html() para garantir execução do JS ──
-# st.markdown() com <script> falha em reruns. components.html() executa sempre.
+# ── Portal visual — box fixa superior ───────────────────────────────
 import streamlit.components.v1 as _components
 
 _admin_icon   = "🔓" if st.session_state.logged_in else "🔐"
@@ -85,28 +73,36 @@ _components.html(f"""
 (function() {{
     var doc = window.parent.document;
     
-    // Remove TODOS os portais anteriores (evita duplicatas em reruns rápidos)
+    // 1. Encontra e esconde o container dos botões originais do Streamlit
+    var marker = doc.getElementById('hf-hidden-btns-marker');
+    if (marker) {{
+        var stContainer = marker.closest('[data-testid="stVerticalBlock"]');
+        if (stContainer) {{
+            stContainer.style.display = 'none';
+        }}
+    }}
+    
+    // 2. Remove TODOS os portais visuais anteriores para evitar duplicatas
     var oldPortals = doc.querySelectorAll('#hf-btn-portal');
     oldPortals.forEach(function(p) {{ p.remove(); }});
 
-    // Cria a box com os dois botões
+    // 3. Cria a box do portal com os dois botões
     var portal = doc.createElement('div');
     portal.id = 'hf-btn-portal';
-    // O CSS base já está no common.css, só precisamos do HTML estrutural
     portal.innerHTML =
         '<button id="hf-btn-admin" title="Admin">{_admin_icon}</button>' +
         '<button id="hf-btn-tema"  title="Tema">{_tema_icon_js}</button>';
     
     doc.body.appendChild(portal);
 
-    // Dispara clique no botão Streamlit correspondente
+    // 4. Lógica de clique que aciona os botões ocultos
     function clickSt(n) {{
-        var cols = doc.querySelectorAll(
-            '[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]'
-        );
-        if (cols && cols[n]) {{
-            var btn = cols[n].querySelector('button');
-            if (btn) btn.click();
+        if (marker) {{
+            var stContainer = marker.closest('[data-testid="stVerticalBlock"]');
+            if (stContainer) {{
+                var btns = stContainer.querySelectorAll('button');
+                if (btns && btns[n]) btns[n].click();
+            }}
         }}
     }}
 
