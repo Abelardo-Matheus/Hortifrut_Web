@@ -41,24 +41,21 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
-col_btn1, col_btn2 = st.columns(2)
-with col_btn1:
-    if st.session_state.logged_in:
-        if st.button("🔓", help="Sair do Modo Admin"):
-            st.session_state.logged_in = False
-            controller.remove("auth_token")
-            import time
-            time.sleep(0.5)
-            st.rerun()
-    else:
-        if st.button("🔐", help="Login Administrativo"):
-            modal_login()
-
-with col_btn2:
-    tema_icon = "🌙" if st.session_state.light_mode else "☀️"
-    if st.button(tema_icon, help="Mudar Tema"):
-        st.session_state.light_mode = not st.session_state.light_mode
+if st.session_state.logged_in:
+    if st.button("🔓", help="Sair do Modo Admin"):
+        st.session_state.logged_in = False
+        controller.remove("auth_token")
+        import time
+        time.sleep(0.5)
         st.rerun()
+else:
+    if st.button("🔐", help="Login Administrativo"):
+        modal_login()
+
+tema_icon = "🌙" if st.session_state.light_mode else "☀️"
+if st.button(tema_icon, help="Mudar Tema"):
+    st.session_state.light_mode = not st.session_state.light_mode
+    st.rerun()
 
 import streamlit.components.v1 as components
 components.html("""
