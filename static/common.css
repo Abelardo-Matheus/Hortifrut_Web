@@ -79,7 +79,7 @@
    Edite aqui para mudar o estilo/posição do botão de tema.
    ================================================================= */
 .btn-tema {
-    position: fixed !important;
+    position: relative !important;
     top: 12px !important;
     right: 12px !important;
     left: auto !important;
