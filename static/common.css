@@ -26,11 +26,11 @@
     perspective: none;
 }
 
-/* Remove position:relative APENAS nos wrappers internos dos botões
-   (não nos containers de scroll do Streamlit) */
-[data-testid="stVerticalBlock"],
-[data-testid="stElementContainer"],
-[data-testid="stHorizontalBlock"] {
+/* Remove position:relative APENAS nos wrappers DENTRO do primeiro bloco de botões
+   (não globalmente — isso quebra tabs, dropdowns e outros componentes do admin) */
+[data-testid="stHorizontalBlock"]:first-of-type,
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stVerticalBlock"],
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stElementContainer"] {
     position: static !important;
 }
 
