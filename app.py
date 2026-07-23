@@ -67,11 +67,12 @@ if st.session_state.light_mode:
         .stApp { 
             filter: invert(1) hue-rotate(180deg); 
         }
+        .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stSidebar"] {
+            background-color: #000000 !important;
+        }
         img, video, iframe { 
             filter: invert(1) hue-rotate(180deg); 
-            background-color: white !important;
             border-radius: 10px;
-            padding: 5px;
         }
     '''
 else:
