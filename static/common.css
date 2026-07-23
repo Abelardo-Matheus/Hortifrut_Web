@@ -14,7 +14,7 @@
     margin-top: 0 !important;
 }
 
-/* Remove transforms que podem criar contextos de empilhamento indesejados */
+/* Remove transforms em toda a árvore do Streamlit */
 [data-testid="stAppViewContainer"],
 .main,
 .block-container,
@@ -26,23 +26,17 @@
     perspective: none;
 }
 
-/* Remove position:relative nos wrappers internos do primeiro bloco de botões */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stVerticalBlock"],
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stElementContainer"],
-[data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"],
-[data-testid="stHorizontalBlock"]:first-of-type .stButton,
-.st-emotion-cache-c2ku3e {
-    position: static !important;
-}
-
 /* =================================================================
    WRAPPER DOS BOTÕES FLUTUANTES
    ─────────────────────────────────────────────────────────────────
-   O WRAPPER é fixo no topo ocupando 100% da largura da tela.
-   Os botões ficam em posição RELATIVA dentro dele (flexbox).
-   Assim justify-content: space-between funciona perfeitamente:
-   btn-admin → esquerda    btn-tema → direita
+   O wrapper é fixo no topo com 100% da largura.
+   Todas as divs intermediárias usam display:contents para sumirem
+   do layout, tornando os botões filhos diretos do flex container.
+   Resultado: space-between coloca admin na esquerda e tema na direita.
    ================================================================= */
+
+/* WRAPPER — fixo no topo, flex, space-between */
+[data-testid="stHorizontalBlock"]:first-of-type,
 .botoes-wrapper {
     position: fixed !important;
     top: 0 !important;
@@ -52,82 +46,7 @@
     height: auto !important;
     min-height: auto !important;
     display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 10px 12px !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-    z-index: 999999 !important;
-    /* Transparente para não bloquear cliques no conteúdo abaixo */
-    pointer-events: none;
-    background: transparent;
-}
-
-/* Cada coluna ocupa apenas o espaço do seu botão */
-[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"] {
-    position: static !important;
-    pointer-events: all;
-    flex: 0 !important;
-}
-
-/* =================================================================
-   BOTÃO ADMIN (🔐 / 🔓) — alinhado à ESQUERDA do wrapper
-   Edite aqui para mudar o estilo do botão de admin.
-   ================================================================= */
-.btn-admin {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 8px;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-    pointer-events: all;
-}
-
-/* =================================================================
-   BOTÃO TEMA (☀️ / 🌙) — alinhado à DIREITA do wrapper
-   Edite aqui para mudar o estilo do botão de tema.
-   ================================================================= */
-.btn-tema {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border-radius: 8px;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-    pointer-events: all;
-}
-
-/* =================================================================
-   FALLBACK (seletores Streamlit — caso o JS não aplique as classes)
-   ================================================================= */
-
-/* Wrapper fallback */
-[data-testid="stHorizontalBlock"]:first-of-type {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    display: flex !important;
+    flex-direction: row !important;
     justify-content: space-between !important;
     align-items: center !important;
     padding: 10px 12px !important;
@@ -139,9 +58,28 @@
     overflow: visible !important;
 }
 
-/* Botão esquerdo (coluna 1) */
+/* DIVS INTERMEDIÁRIAS — display:contents as torna invisíveis ao layout
+   Os botões passam a ser filhos diretos do flex wrapper */
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"],
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stElementContainer"],
+[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stVerticalBlock"],
+[data-testid="stHorizontalBlock"]:first-of-type [class*="st-emotion-cache"],
+[data-testid="stHorizontalBlock"]:first-of-type .stButton,
+.st-emotion-cache-c2ku3e {
+    display: contents !important;
+    position: static !important;
+}
+
+/* =================================================================
+   BOTÃO ADMIN (🔐 / 🔓) — esquerda
+   Edite apenas esta seção para mudar o botão de admin.
+   ================================================================= */
+.btn-admin,
 [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(1) button {
     position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     top: auto !important;
     left: auto !important;
     right: auto !important;
@@ -154,12 +92,20 @@
     border-radius: 8px;
     font-size: 18px;
     line-height: 1;
+    cursor: pointer;
     pointer-events: all;
 }
 
-/* Botão direito (coluna 2) */
+/* =================================================================
+   BOTÃO TEMA (☀️ / 🌙) — direita
+   Edite apenas esta seção para mudar o botão de tema.
+   ================================================================= */
+.btn-tema,
 [data-testid="stHorizontalBlock"]:first-of-type [data-testid="column"]:nth-child(2) button {
     position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     top: auto !important;
     left: auto !important;
     right: auto !important;
@@ -172,6 +118,7 @@
     border-radius: 8px;
     font-size: 18px;
     line-height: 1;
+    cursor: pointer;
     pointer-events: all;
 }
 
@@ -179,8 +126,8 @@
    RESPONSIVIDADE — Celulares
    ================================================================= */
 @media (max-width: 768px) {
-    .botoes-wrapper,
-    [data-testid="stHorizontalBlock"]:first-of-type {
+    [data-testid="stHorizontalBlock"]:first-of-type,
+    .botoes-wrapper {
         padding: 8px !important;
     }
 
@@ -191,5 +138,6 @@
         height: 36px !important;
         min-width: 36px !important;
         min-height: 36px !important;
+        font-size: 16px;
     }
 }
