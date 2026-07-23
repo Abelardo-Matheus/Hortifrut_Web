@@ -289,24 +289,77 @@ def render_admin():
                     else:
                         st.error("Preencha os campos obrigatórios (Nome e Preço de Venda).")
                         
-        st.markdown("### 📋 Tabela de Produtos")
+        st.markdown("### 📋 Tabela de Produtos (Edite diretamente na tabela)")
         
-        if produtos:
-            produtos_view = []
-            for p in produtos:
-                estoque_str = f"⚠️ {p['quantidade_estoque']}" if p['quantidade_estoque'] <= 5 else p['quantidade_estoque']
-                produtos_view.append({
-                    'Nome': p['nome'],
-                    'Categoria': p['categoria'],
-                    'Estoque': estoque_str,
-                    'Data Compra': p.get('data_compra', ''),
-                    'Custo (R$)': p['preco_custo'],
-                    'Venda (R$)': p['preco_venda']
-                })
+        busca_estoque = st.text_input("🔍 Buscar Produto no Estoque", placeholder="Digite o nome ou código do produto...")
+        
+        prods_f = produtos
+        if busca_estoque:
+            prods_f = [p for p in produtos if busca_estoque.lower() in p['nome'].lower() or (p['codigo_barras'] and busca_estoque in p['codigo_barras'])]
             
-            st.dataframe(produtos_view, use_container_width=True, hide_index=True)
+        if prods_f:
+            import pandas as pd
+            df_prods = pd.DataFrame([{
+                '_ID': p['id'],
+                'Nome': p['nome'],
+                'Código': p.get('codigo_barras', ''),
+                'Categoria': p['categoria'],
+                'Estoque': float(p['quantidade_estoque']),
+                'Data Compra': p.get('data_compra', ''),
+                'Custo': float(p['preco_custo']),
+                'Venda': float(p['preco_venda'])
+            } for p in prods_f])
+            
+            edited_df = st.data_editor(
+                df_prods,
+                use_container_width=True,
+                hide_index=True,
+                num_rows="dynamic",
+                column_config={
+                    "_ID": None,
+                    "Categoria": st.column_config.SelectboxColumn("Categoria", options=["Frutas", "Legumes", "Verduras", "Horta (Ilimitado)", "Mercearia", "Outros"]),
+                    "Custo": st.column_config.NumberColumn("Custo (R$)", min_value=0.0, step=0.1, format="%.2f"),
+                    "Venda": st.column_config.NumberColumn("Venda (R$)", min_value=0.0, step=0.1, format="%.2f"),
+                    "Estoque": st.column_config.NumberColumn("Estoque", min_value=0.0, step=1.0)
+                }
+            )
+            
+            if st.button("💾 Salvar Alterações", type="primary", use_container_width=True):
+                with st.spinner("Salvando..."):
+                    sucesso = True
+                    
+                    # 1. Checar adições e edições
+                    for _, row in edited_df.iterrows():
+                        prod_id = row['_ID']
+                        if pd.isna(prod_id) or prod_id == "": # Produto novo adicionado na tabela
+                            res = db.adicionar_produto(row['Nome'], row['Código'], row['Categoria'], row['Custo'], row['Venda'], row['Estoque'], row['Data Compra'])
+                            if not res: sucesso = False
+                        else:
+                            # Buscar original
+                            orig = df_prods[df_prods['_ID'] == prod_id].iloc[0]
+                            if not row.equals(orig):
+                                res = db.atualizar_produto(prod_id, row['Nome'], row['Código'], row['Categoria'], row['Custo'], row['Venda'], row['Estoque'], row['Data Compra'])
+                                if not res: sucesso = False
+                                
+                    # 2. Checar exclusões
+                    edited_ids = edited_df['_ID'].dropna().tolist()
+                    for _, orig_row in df_prods.iterrows():
+                        if orig_row['_ID'] not in edited_ids:
+                            res = db.excluir_produto(orig_row['_ID'])
+                            if not res: sucesso = False
+                            
+                    if sucesso:
+                        st.success("Tudo salvo com sucesso!")
+                        import time
+                        time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        st.error("Ocorreu um erro ao salvar algumas alterações.")
         else:
-            st.info("Nenhum produto cadastrado no banco de dados.")
+            if busca_estoque:
+                st.warning("Nenhum produto encontrado com essa busca.")
+            else:
+                st.info("Nenhum produto cadastrado no banco de dados.")
     
     # =========================================================
     # ABA 3: FIADO (ANOTADO)
