@@ -652,6 +652,8 @@ else:
     if part_top.strip():
         st.markdown(part_top, unsafe_allow_html=True)
 
+    st.markdown("---")
+
     # ── 4. Widgets nativos do Streamlit (busca + botão) ─────────────────────────
     produtos = db.get_produtos()
 
@@ -688,7 +690,6 @@ else:
         prods_vitrine = [p for p in produtos if busca.lower() in p['nome'].lower()]
 
     st.write("")
-    st.markdown("---")
 
     # ── 5. Monta os cards e injeta na grade ─────────────────────────────────────
     html_cards = []
