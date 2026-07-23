@@ -41,7 +41,21 @@ def modal_login():
 if "light_mode" not in st.session_state:
     st.session_state.light_mode = False
 
+# Oculta instantaneamente os botões nativos para evitar que eles "pisquem" na tela
+# antes do CSS principal carregar.
+st.markdown("""
+<style>
+[data-testid="stHorizontalBlock"]:first-of-type {
+    position: absolute !important;
+    top: -9999px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── Botões funcionais do Streamlit (ficam ocultos via CSS) ───────────
+
 # O clique real é disparado pelo portal JS abaixo.
 _col_admin, _col_tema = st.columns([1, 1])
 
