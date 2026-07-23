@@ -122,22 +122,30 @@ css_theme += '''
         [data-testid="stDecoration"] { display: none !important; }
         .block-container { padding-top: 0rem !important; margin-top: 0 !important; }
         
-        /* Flutuar os botões sobre o vídeo e forçar lado a lado */
+        /* Flutuar os botões sobre o vídeo e forçar lado a lado nos cantos */
         [data-testid="stHorizontalBlock"]:has(#btn-anchor) {
             position: absolute !important;
             top: 15px;
             left: 15px;
+            right: 15px;
+            width: calc(100% - 30px) !important;
             z-index: 999;
-            width: auto !important;
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: nowrap !important;
-            gap: 10px !important;
+            justify-content: space-between !important;
+            align-items: center !important;
         }
         [data-testid="stHorizontalBlock"]:has(#btn-anchor) > [data-testid="column"] {
             width: auto !important;
             min-width: 0 !important;
             flex: 0 0 auto !important;
+        }
+        [data-testid="stHorizontalBlock"]:has(#btn-anchor) button {
+            margin: 0 !important;
+        }
+        [data-testid="stElementContainer"]:has(#btn-anchor) {
+            display: none !important;
         }
 '''
 
