@@ -3,21 +3,23 @@
    ================================================================= */
 
 /* ===== CABEÇALHO: VÍDEO LOGO ===== */
-/* Container com altura aumentada (+100px) */
+/* Container com altura máxima da tela (100vh) */
 .video-container {
-    max-height: 280px;
+    height: 100vh;
+    max-height: 100vh;
     line-height: 0;
     overflow: hidden;
     display: block;
+    width: 100%;
 }
 
-/* Vídeo estica para preencher exatamente a caixa (largura + altura) */
+/* Vídeo estica para preencher exatamente a caixa sem deixar vazio */
 .logo-video {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: fill;
-    max-height: 280px;
+    object-fit: cover;
+    max-height: 100vh;
 }
 
 /* ===== LAYOUT GERAL ===== */
