@@ -39,7 +39,7 @@ def get_produtos():
         st.error(f"Erro ao buscar produtos: {e}")
         return []
 
-def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra):
+def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra, unidade_medida="Un"):
     """Adiciona um novo produto ao banco"""
     try:
         data = {
@@ -49,7 +49,8 @@ def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, 
             "preco_custo": float(preco_custo),
             "preco_venda": float(preco_venda),
             "quantidade_estoque": float(estoque),
-            "data_compra": data_compra
+            "data_compra": data_compra,
+            "unidade_medida": unidade_medida
         }
         supabase.table("produtos").insert(data).execute()
         return True
@@ -57,7 +58,7 @@ def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, 
         st.error(f"Erro ao adicionar produto: {e}")
         return False
 
-def atualizar_produto(produto_id, nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra):
+def atualizar_produto(produto_id, nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra, unidade_medida="Un"):
     """Atualiza as informações de um produto existente"""
     try:
         data = {
@@ -67,7 +68,8 @@ def atualizar_produto(produto_id, nome, codigo_barras, categoria, preco_custo, p
             "preco_custo": float(preco_custo),
             "preco_venda": float(preco_venda),
             "quantidade_estoque": float(estoque),
-            "data_compra": data_compra
+            "data_compra": data_compra,
+            "unidade_medida": unidade_medida
         }
         supabase.table("produtos").update(data).eq("id", produto_id).execute()
         return True

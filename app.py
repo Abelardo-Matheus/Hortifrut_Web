@@ -198,7 +198,7 @@ def render_admin():
                                                 "preco_unitario": float(p['preco_venda']),
                                                 "subtotal": float(qtd) * float(p['preco_venda']),
                                                 "custo": float(qtd) * float(p['preco_custo']),
-                                                "unidade_medida": p['unidade_medida']
+                                                "unidade_medida": p.get('unidade_medida', 'Un')
                                             })
                                             st.rerun()
                                         
@@ -256,18 +256,19 @@ def render_admin():
                 codigo = c2.text_input("Código de Barras")
                 categoria = c3.selectbox("Categoria", ["Frutas", "Legumes", "Verduras", "Horta (Ilimitado)", "Mercearia", "Outros"])
                 
-                c4, c5, c6, c7 = st.columns(4)
+                c4, c5, c6, c7, c8 = st.columns(5)
                 custo = c4.number_input("Preço de Custo (R$)", min_value=0.0, step=0.1)
                 venda = c5.number_input("Preço de Venda (R$) *", min_value=0.0, step=0.1)
                 estoque = c6.number_input("Estoque Inicial", min_value=0.0, step=1.0)
-                unidade = c7.text_input("Data de Compra", placeholder="Ex: 02/06/2026")
+                data_compra = c7.text_input("Data de Compra", placeholder="Ex: 02/06/2026")
+                unidade_medida = c8.selectbox("Vendido por", ["Un", "Kg"])
                 
                 imagem_upload = st.file_uploader("Foto do Produto (Opcional)", type=["png", "jpg", "jpeg"])
                 
                 submit = st.form_submit_button("Salvar Produto", type="primary")
                 if submit:
                     if nome and venda >= 0:
-                        sucesso = db.adicionar_produto(nome, codigo, categoria, custo, venda, estoque, unidade)
+                        sucesso = db.adicionar_produto(nome, codigo, categoria, custo, venda, estoque, data_compra, unidade_medida)
                         if sucesso:
                             if imagem_upload:
                                 import threading
@@ -346,6 +347,7 @@ def render_admin():
                 'Nome': p['nome'],
                 'Código': p.get('codigo_barras', ''),
                 'Categoria': p['categoria'],
+                'Medida': p.get('unidade_medida', 'Un'),
                 'Estoque': float(p['quantidade_estoque']),
                 'Data Compra': p.get('data_compra', ''),
                 'Custo': float(p['preco_custo']),
@@ -360,6 +362,7 @@ def render_admin():
                 column_config={
                     "_ID": None,
                     "Categoria": st.column_config.SelectboxColumn("Categoria", options=["Frutas", "Legumes", "Verduras", "Horta (Ilimitado)", "Mercearia", "Outros"]),
+                    "Medida": st.column_config.SelectboxColumn("Medida", options=["Un", "Kg"]),
                     "Custo": st.column_config.NumberColumn("Custo (R$)", min_value=0.0, step=0.1, format="%.2f"),
                     "Venda": st.column_config.NumberColumn("Venda (R$)", min_value=0.0, step=0.1, format="%.2f"),
                     "Estoque": st.column_config.NumberColumn("Estoque", min_value=0.0, step=1.0)
@@ -374,13 +377,13 @@ def render_admin():
                     for _, row in edited_df.iterrows():
                         prod_id = row['_ID']
                         if pd.isna(prod_id) or prod_id == "": # Produto novo adicionado na tabela
-                            res = db.adicionar_produto(row['Nome'], row['Código'], row['Categoria'], row['Custo'], row['Venda'], row['Estoque'], row['Data Compra'])
+                            res = db.adicionar_produto(row['Nome'], row['Código'], row['Categoria'], row['Custo'], row['Venda'], row['Estoque'], row['Data Compra'], row['Medida'])
                             if not res: sucesso = False
                         else:
                             # Buscar original
                             orig = df_prods[df_prods['_ID'] == prod_id].iloc[0]
                             if not row.equals(orig):
-                                res = db.atualizar_produto(prod_id, row['Nome'], row['Código'], row['Categoria'], row['Custo'], row['Venda'], row['Estoque'], row['Data Compra'])
+                                res = db.atualizar_produto(prod_id, row['Nome'], row['Código'], row['Categoria'], row['Custo'], row['Venda'], row['Estoque'], row['Data Compra'], row['Medida'])
                                 if not res: sucesso = False
                                 
                     # 2. Checar exclusões
