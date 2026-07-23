@@ -19,11 +19,19 @@ def render_admin():
         import streamlit.components.v1 as components
         components.html('''
             <script>
-                // Tenta encontrar o botão de fechar a sidebar no painel pai e clica
-                const doc = window.parent.document;
-                const buttons = Array.from(doc.querySelectorAll('button'));
-                const closeBtn = buttons.find(b => b.getAttribute('data-testid') === 'baseButton-headerNoPadding' || b.innerHTML.includes('svg'));
-                if(closeBtn) closeBtn.click();
+                setTimeout(() => {
+                    const doc = window.parent.document;
+                    // Procura o botão de toggle da sidebar que fica no header
+                    const toggleBtn = doc.querySelector('[data-testid="collapsedControl"]');
+                    if (toggleBtn) {
+                        toggleBtn.click();
+                    } else {
+                        // Tenta abordagem genérica procurando SVGs que indicam fechar
+                        const buttons = Array.from(doc.querySelectorAll('button'));
+                        const closeBtn = buttons.find(b => b.getAttribute('aria-expanded') === 'true' || b.getAttribute('data-testid') === 'baseButton-header');
+                        if(closeBtn) closeBtn.click();
+                    }
+                }, 100);
             </script>
         ''', height=0, width=0)
         st.session_state.fechar_sidebar = False
@@ -554,11 +562,11 @@ else:
     # CSS para as imagens da vitrine
     st.markdown('''
     <style>
-    /* Expandir a tela ao máximo possível */
+    /* Expandir a tela ao máximo possível com margem direita de 10px */
     .block-container {
         padding-top: 2rem !important;
         padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        padding-right: 10px !important;
         max-width: 100% !important;
     }
     
@@ -629,14 +637,14 @@ else:
                         if p.get("imagem_url"):
                             st.markdown(f'<div style="display: flex; justify-content: center; height: 120px; align-items: center; margin-bottom: 10px;"><img class="blend-img" src="{p["imagem_url"]}"></div>', unsafe_allow_html=True)
                         else:
-                            st.markdown('<div style="height: 170px; display: flex; justify-content: center; align-items: center; color: #ccc;">Sem Imagem</div>', unsafe_allow_html=True)
+                            st.markdown('<div style="height: 120px; display: flex; justify-content: center; align-items: center; color: #ccc; margin-bottom: 10px;">Sem Imagem</div>', unsafe_allow_html=True)
                             
                         # Nome do Produto
                         nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-                        st.markdown(f'<div style=\"height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 20px; margin-bottom: 5px; text-align: center;\">{nome_curto}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div style=\"height: 48px; overflow: hidden; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-bottom: 5px; text-align: center;\">{nome_curto}</div>', unsafe_allow_html=True)
                         
                         # Preço
-                        st.markdown(f'<div style="font-size: 22px; margin-bottom: 5px; color: #27ae60; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b> <span style="font-size:14px; color:#7f8c8d;">/ {p["unidade_medida"]}</span></div>', unsafe_allow_html=True)
+                        st.markdown(f'<div style="display: flex; justify-content: center; align-items: center; font-size: 20px; margin-bottom: 5px; color: #27ae60; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b> <span style="font-size:14px; color:#7f8c8d; margin-left: 5px;">/ {p["unidade_medida"]}</span></div>', unsafe_allow_html=True)
                         
                         # Estoque/Disponibilidade
                         if p['quantidade_estoque'] > 0 or p['categoria'] == 'Horta (Ilimitado)':
