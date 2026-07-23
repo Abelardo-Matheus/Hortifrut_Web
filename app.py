@@ -315,12 +315,17 @@ def render_admin():
                                                     import threading
                                                     def process_edit_upload(i_bytes, fname, p_id):
                                                         try:
-                                                            import io, urllib.parse
+                                                            import io, urllib.parse, time
                                                             from PIL import Image
                                                             from rembg import remove
                                                             from database import supabase
-                                                            safe_name = urllib.parse.quote(fname)
-                                                            supabase.storage.from_("produtos").upload(path=safe_name, file=i_bytes, file_options={"content-type": "image/jpeg"})
+                                                            
+                                                            # Generate unique name
+                                                            ext = fname.split('.')[-1] if '.' in fname else 'jpg'
+                                                            unique_name = f"{p_id}_{int(time.time())}.{ext}"
+                                                            safe_name = urllib.parse.quote(unique_name)
+                                                            
+                                                            supabase.storage.from_("produtos").upload(path=safe_name, file=i_bytes, file_options={"content-type": f"image/{ext}", "upsert": "true"})
                                                             url_orig = supabase.storage.from_("produtos").get_public_url(safe_name)
                                                             supabase.table("produtos").update({"imagem_url": url_orig}).eq("id", p_id).execute()
                                                             
@@ -329,11 +334,13 @@ def render_admin():
                                                             out_bytes = io.BytesIO()
                                                             img_nobg.save(out_bytes, format='PNG')
                                                             out_bytes.seek(0)
+                                                            
                                                             new_name = safe_name.split('.')[0] + "_nobg.png"
                                                             try: supabase.storage.from_("produtos").remove([new_name])
                                                             except: pass
-                                                            supabase.storage.from_("produtos").upload(path=new_name, file=out_bytes.read(), file_options={"content-type": "image/png"})
+                                                            supabase.storage.from_("produtos").upload(path=new_name, file=out_bytes.read(), file_options={"content-type": "image/png", "upsert": "true"})
                                                             url_nobg = supabase.storage.from_("produtos").get_public_url(new_name)
+                                                            
                                                             supabase.table("produtos").update({"imagem_url": url_nobg}).eq("id", p_id).execute()
                                                         except Exception as e:
                                                             print("Erro update bg:", e)
