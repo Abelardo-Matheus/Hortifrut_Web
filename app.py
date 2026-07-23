@@ -711,21 +711,17 @@ else:
         else:
             estoque_html = "<div class='vitrine-estoque esgot'>✗ Esgotado</div>"
             
-        card_html = f"""
-        <div class="vitrine-card">
-            {img_html}
-            {nome_html}
-            {preco_html}
-            {estoque_html}
-        </div>
-        """
+        card_html = f"""<div class="vitrine-card">
+{img_html}
+{nome_html}
+{preco_html}
+{estoque_html}
+</div>"""
         html_cards.append(card_html)
         
-    grid_html = f"""
-    <div class="vitrine-grid">
-        {"".join(html_cards)}
-    </div>
-    """
+    grid_html = f"""<div class="vitrine-grid">
+{"".join(html_cards)}
+</div>"""
     st.markdown(grid_html, unsafe_allow_html=True)
 
     st.markdown("---")
