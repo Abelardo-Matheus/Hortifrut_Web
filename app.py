@@ -66,7 +66,9 @@ def render_admin():
     st.title("🍎 Gestão Hortifruti J&M")
     
     # Carregar produtos do banco
-    produtos = db.get_produtos()
+    if 'produtos_local' not in st.session_state:
+        st.session_state.produtos_local = db.get_produtos()
+    produtos = st.session_state.produtos_local
     
     # Abas do Sistema
     tab_pdv, tab_estoque, tab_fiado, tab_retiradas, tab_relatorios, tab_solicitacoes = st.tabs(["🛒 Caixa", "📦 Estoque", "📝 Fiado", "🏠 Retiradas", "📊 Relatórios", "🔔 Solicitações"])
@@ -171,6 +173,12 @@ def render_admin():
                     sucesso = db.registrar_venda(total, lucro, forma_pag, st.session_state.carrinho)
                     if sucesso:
                         st.success("Venda registrada com sucesso!")
+                        # Atualiza estoque no cache local
+                        for item in st.session_state.carrinho:
+                            for p in st.session_state.produtos_local:
+                                if p['id'] == item['produto_id']:
+                                    p['quantidade_estoque'] -= item['quantidade']
+                                    if p['quantidade_estoque'] < 0: p['quantidade_estoque'] = 0
                         st.session_state.carrinho = [] # Limpa carrinho
                         st.balloons()
                     else:
@@ -203,6 +211,7 @@ def render_admin():
                     if nome and venda >= 0:
                         sucesso = db.adicionar_produto(nome, codigo, categoria, custo, venda, estoque, data_compra, unidade_medida)
                         if sucesso:
+                            st.session_state.produtos_local = db.get_produtos()
                             if imagem_upload:
                                 import threading
                                 def process_and_upload(img_bytes, filename, prod_nome, prod_cod):
@@ -350,9 +359,11 @@ def render_admin():
                                                     t.start()
                                                 
                                                 st.success("Salvo!")
+                                                st.session_state.produtos_local = db.get_produtos()
                                                 import time; time.sleep(0.2); st.rerun()
                                     if st.button("🗑️ Excluir Produto", key=f"del_{p['id']}", use_container_width=True):
                                         if db.excluir_produto(p['id']):
+                                            st.session_state.produtos_local = [prod for prod in st.session_state.produtos_local if prod['id'] != p['id']]
                                             st.rerun()
         else:
             if busca_estoque:
@@ -463,6 +474,10 @@ def render_admin():
                         }
                         if db.anotar_compra(cli_selecionado['id'], [item]):
                             st.success("Compra anotada com sucesso!")
+                            for p in st.session_state.produtos_local:
+                                if p['id'] == item['produto_id'] and p.get('is_estoque_controlado', True):
+                                    p['quantidade_estoque'] -= item['quantidade']
+                                    if p['quantidade_estoque'] < 0: p['quantidade_estoque'] = 0
                             st.rerun()
     
     # =========================================================
@@ -499,6 +514,10 @@ def render_admin():
                     }
                     if db.registrar_retirada_casa([item_r]):
                         st.success("Retirada registrada!")
+                        for p in st.session_state.produtos_local:
+                            if p['id'] == item_r['produto_id'] and p.get('is_estoque_controlado', True):
+                                p['quantidade_estoque'] -= item_r['quantidade']
+                                if p['quantidade_estoque'] < 0: p['quantidade_estoque'] = 0
                         st.rerun()
                         
         with col_ret_hist:
