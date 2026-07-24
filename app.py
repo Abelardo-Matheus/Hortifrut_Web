@@ -85,36 +85,49 @@ def render_pdv(produtos):
             or (p.get('codigo_barras') and busca in str(p['codigo_barras']))
         ]
 
-        # ── Grid HTML puro: uma única chamada para todos os produtos ──────────
+        # ── Injeção de CSS separada (necessário antes do grid) ───────────────
+        st.markdown(
+            "<style>"
+            ".pdv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px;}"
+            "@media(max-width:1200px){.pdv-grid{grid-template-columns:repeat(4,1fr);}}"
+            "@media(max-width:900px){.pdv-grid{grid-template-columns:repeat(3,1fr);}}"
+            ".pdv-card{border:1px solid #444;border-radius:10px;padding:8px;text-align:center;min-height:185px;display:flex;flex-direction:column;justify-content:space-between;}"
+            ".pdv-card-img{height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;}"
+            ".pdv-card-img img{max-width:100%;max-height:80px;object-fit:contain;border-radius:6px;}"
+            ".pdv-card-nome{font-weight:700;font-size:13px;margin:4px 0;line-height:1.2;}"
+            ".pdv-card-preco{font-size:15px;color:#27ae60;font-weight:800;}"
+            ".pdv-card-badge{font-size:11px;font-weight:600;margin-top:2px;}"
+            ".pdv-sem-foto{height:80px;display:flex;align-items:center;justify-content:center;opacity:.4;font-size:11px;}"
+            "</style>",
+            unsafe_allow_html=True
+        )
+
+        # ── Grid HTML puro: uma única st.markdown call para todos os produtos ──
         cards_html = []
         for p in prods_filtrados:
             esgotado = p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)'
             badge_color = "#e74c3c" if esgotado else "#27ae60"
-            badge_text = "Esgotado" if esgotado else f"{p['quantidade_estoque']} {p.get('unidade_medida','Un')}"
-            img_html = (
-                f'<img src="{p["imagem_url"]}" style="max-width:100%;max-height:80px;object-fit:contain;border-radius:6px;">'
-                if p.get("imagem_url") else
-                '<div style="height:80px;display:flex;align-items:center;justify-content:center;opacity:.4;font-size:11px;">Sem foto</div>'
-            )
-            nome_curto = p['nome'] if len(p['nome']) <= 22 else p['nome'][:20] + '…'
-            cards_html.append(f"""
-            <div style="border:1px solid #444;border-radius:10px;padding:8px;text-align:center;
-                        background:var(--card-bg,#1e1e1e);min-height:190px;display:flex;
-                        flex-direction:column;justify-content:space-between;">
-              <div style="height:80px;display:flex;align-items:center;justify-content:center;">{img_html}</div>
-              <div style="font-weight:700;font-size:13px;margin:4px 0;line-height:1.2;">{nome_curto}</div>
-              <div style="font-size:14px;color:#27ae60;font-weight:800;">R$ {p['preco_venda']:.2f}</div>
-              <div style="font-size:11px;color:{badge_color};font-weight:600;">{badge_text}</div>
-            </div>""")
+            badge_text = "Esgotado" if esgotado else f"{p['quantidade_estoque']} {p.get('unidade_medida', 'Un')}"
+            nome_curto = p['nome'][:20] + '…' if len(p['nome']) > 22 else p['nome']
 
-        # Renderiza grid responsivo de 5 colunas em HTML puro
-        grid_css = """
-        <style>
-        .pdv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px;}
-        @media(max-width:1100px){.pdv-grid{grid-template-columns:repeat(4,1fr);}}
-        @media(max-width:800px){.pdv-grid{grid-template-columns:repeat(3,1fr);}}
-        </style>"""
-        st.markdown(grid_css + f'<div class="pdv-grid">{"".join(cards_html)}</div>', unsafe_allow_html=True)
+            if p.get("imagem_url"):
+                img_part = f'<img src="{p["imagem_url"]}" style="max-width:100%;max-height:80px;object-fit:contain;border-radius:6px;">'
+            else:
+                img_part = '<span style="opacity:.4;font-size:11px;">Sem foto</span>'
+
+            card = (
+                '<div class="pdv-card">'
+                f'<div class="pdv-card-img">{img_part}</div>'
+                f'<div class="pdv-card-nome">{nome_curto}</div>'
+                f'<div class="pdv-card-preco">R$ {p["preco_venda"]:.2f}</div>'
+                f'<div class="pdv-card-badge" style="color:{badge_color};">{badge_text}</div>'
+                '</div>'
+            )
+            cards_html.append(card)
+
+        all_cards = "".join(cards_html)
+        st.markdown(f'<div class="pdv-grid">{all_cards}</div>', unsafe_allow_html=True)
+
 
         # ── Formulário compacto para adicionar ao carrinho ─────────────────────
         st.markdown("---")
