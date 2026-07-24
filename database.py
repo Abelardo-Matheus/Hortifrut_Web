@@ -107,48 +107,53 @@ def excluir_produto(produto_id):
 
 def registrar_venda(valor_total, lucro_total, forma_pagamento, itens):
     """
-    Registra uma venda, os itens da venda, e desconta do estoque.
-    Por ser um banco via API, faremos as operações de forma sequencial.
+    Registra uma venda e seus itens em batch.
+    O desconto de estoque é feito em background (não bloqueia a UI).
+    O novo_estoque de cada item deve ser pré-calculado pelo cliente e passado em item['novo_estoque'].
     """
+    import threading
     try:
-        # 1. Registrar a Venda
+        # 1. Inserir venda
         dados_venda = {
             "valor_total": float(valor_total),
             "lucro_total": float(lucro_total),
             "forma_pagamento": forma_pagamento
         }
         resp_venda = supabase.table("vendas").insert(dados_venda).execute()
-        
+
         if not resp_venda.data:
             return False
-            
+
         venda_id = resp_venda.data[0]['id']
-        
-        # 2. Inserir itens da venda e descontar estoque
-        for item in itens:
-            prod_id = item['produto_id']
-            qtd = float(item['quantidade'])
-            
-            # Inserir na tabela itens_venda
-            dados_item = {
+
+        # 2. Batch insert de todos os itens de uma vez (1 query ao invés de N)
+        dados_itens = [
+            {
                 "venda_id": venda_id,
-                "produto_id": prod_id,
-                "quantidade": qtd,
+                "produto_id": item['produto_id'],
+                "quantidade": float(item['quantidade']),
                 "preco_unitario": float(item['preco_unitario']),
                 "subtotal": float(item['subtotal'])
             }
-            supabase.table("itens_venda").insert(dados_item).execute()
-            
-            # Descontar do estoque (Se não for Horta ilimitada)
-            if item.get('is_estoque_controlado', True):
-                # Busca o estoque atual
-                prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", prod_id).execute()
-                if prod_data.data:
-                    estoque_atual = prod_data.data[0]['quantidade_estoque']
-                    novo_estoque = max(0.0, estoque_atual - qtd)
-                    # Atualiza o estoque
-                    supabase.table("produtos").update({"quantidade_estoque": novo_estoque}).eq("id", prod_id).execute()
-                    
+            for item in itens
+        ]
+        supabase.table("itens_venda").insert(dados_itens).execute()
+
+        # 3. Atualizar estoque em background (não bloqueia a UI)
+        # O cliente já calculou novo_estoque = estoque_local - qtd_vendida
+        def _atualizar_estoques(itens_snapshot):
+            try:
+                for item in itens_snapshot:
+                    if item.get('is_estoque_controlado', True) and 'novo_estoque' in item:
+                        supabase.table("produtos").update(
+                            {"quantidade_estoque": float(item['novo_estoque'])}
+                        ).eq("id", item['produto_id']).execute()
+            except Exception as e_bg:
+                print(f"[BG] Erro ao atualizar estoque: {e_bg}")
+
+        t = threading.Thread(target=_atualizar_estoques, args=(list(itens),), daemon=True)
+        t.start()
+
         get_produtos.clear()
         return True
     except Exception as e:
@@ -194,25 +199,41 @@ def delete_cliente(cliente_id):
         return False
 
 def anotar_compra(cliente_id, itens):
+    """
+    Anota compras em lote. Se item tiver 'novo_estoque', usa esse valor diretamente
+    (cliente pre-calcula para evitar SELECT desnecessario).
+    """
+    import threading
     try:
-        for item in itens:
-            prod_id = item['produto_id']
-            qtd = float(item['quantidade'])
-            
-            dados = {
+        dados_list = [
+            {
                 "cliente_id": cliente_id,
-                "produto_id": prod_id,
-                "quantidade": qtd,
+                "produto_id": item['produto_id'],
+                "quantidade": float(item['quantidade']),
                 "preco_unitario": float(item['preco_unitario'])
             }
-            supabase.table("compras_anotadas").insert(dados).execute()
-            
-            # Descontar do estoque (Se não for Horta)
-            if item.get('is_estoque_controlado', True):
-                prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", prod_id).execute()
-                if prod_data.data:
-                    novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - qtd)
-                    supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+            for item in itens
+        ]
+        supabase.table("compras_anotadas").insert(dados_list).execute()
+
+        def _atualizar_estoques(itens_snapshot):
+            try:
+                for item in itens_snapshot:
+                    if item.get('is_estoque_controlado', True) and 'novo_estoque' in item:
+                        supabase.table("produtos").update(
+                            {"quantidade_estoque": float(item['novo_estoque'])}
+                        ).eq("id", item['produto_id']).execute()
+                    elif item.get('is_estoque_controlado', True):
+                        # Fallback: busca e desconta (caso novo_estoque nao fornecido)
+                        prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", item['produto_id']).execute()
+                        if prod_data.data:
+                            novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - float(item['quantidade']))
+                            supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", item['produto_id']).execute()
+            except Exception as e_bg:
+                print(f"[BG] Erro ao atualizar estoque (anotar_compra): {e_bg}")
+
+        t = threading.Thread(target=_atualizar_estoques, args=(list(itens),), daemon=True)
+        t.start()
         get_produtos.clear()
         return True
     except Exception as e:
@@ -272,24 +293,38 @@ def excluir_compra_anotada(compra_id):
 # ==========================================
 
 def registrar_retirada_casa(itens):
+    """
+    Registra retiradas em lote. Se item tiver 'novo_estoque', usa esse valor diretamente.
+    """
+    import threading
     try:
-        for item in itens:
-            prod_id = item['produto_id']
-            qtd = float(item['quantidade'])
-            
-            dados = {
-                "produto_id": prod_id,
-                "quantidade": qtd,
-                "custo_unitario": float(item['preco_custo']) # Retirada é a preço de custo
+        dados_list = [
+            {
+                "produto_id": item['produto_id'],
+                "quantidade": float(item['quantidade']),
+                "custo_unitario": float(item['preco_custo'])
             }
-            supabase.table("retiradas_casa").insert(dados).execute()
-            
-            # Descontar do estoque
-            if item.get('is_estoque_controlado', True):
-                prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", prod_id).execute()
-                if prod_data.data:
-                    novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - qtd)
-                    supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+            for item in itens
+        ]
+        supabase.table("retiradas_casa").insert(dados_list).execute()
+
+        def _atualizar_estoques(itens_snapshot):
+            try:
+                for item in itens_snapshot:
+                    if item.get('is_estoque_controlado', True) and 'novo_estoque' in item:
+                        supabase.table("produtos").update(
+                            {"quantidade_estoque": float(item['novo_estoque'])}
+                        ).eq("id", item['produto_id']).execute()
+                    elif item.get('is_estoque_controlado', True):
+                        prod_data = supabase.table("produtos").select("quantidade_estoque").eq("id", item['produto_id']).execute()
+                        if prod_data.data:
+                            novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - float(item['quantidade']))
+                            supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", item['produto_id']).execute()
+            except Exception as e_bg:
+                print(f"[BG] Erro ao atualizar estoque (retirada): {e_bg}")
+
+        t = threading.Thread(target=_atualizar_estoques, args=(list(itens),), daemon=True)
+        t.start()
         get_produtos.clear()
         return True
     except Exception as e:

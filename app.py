@@ -60,6 +60,165 @@ def load_html(file_name):
 css_theme = load_css("light_theme.css") if st.session_state.light_mode else load_css("dark_theme.css")
 css_theme += load_css("common.css")
 
+@st.fragment
+def render_pdv(produtos):
+    """
+    PDV isolado como fragment — só este bloco re-executa ao adicionar/remover itens.
+    Grid de produtos em HTML puro (1 st.markdown call) = zero widgets por produto.
+    """
+    # Inicializa sessão
+    if 'carrinho' not in st.session_state:
+        st.session_state.carrinho = []
+    if '_pdv_msg' not in st.session_state:
+        st.session_state._pdv_msg = None
+
+    col_produtos, col_carrinho = st.columns([3, 2])
+
+    with col_produtos:
+        st.subheader("🛒 Produtos")
+        busca = st.text_input("🔍 Buscar por nome ou código:", key="busca_pdv_frag", placeholder="Ex: Maçã, 7891...")
+
+        prods_filtrados = [
+            p for p in produtos
+            if not busca
+            or busca.lower() in p['nome'].lower()
+            or (p.get('codigo_barras') and busca in str(p['codigo_barras']))
+        ]
+
+        # ── Grid HTML puro: uma única chamada para todos os produtos ──────────
+        cards_html = []
+        for p in prods_filtrados:
+            esgotado = p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)'
+            badge_color = "#e74c3c" if esgotado else "#27ae60"
+            badge_text = "Esgotado" if esgotado else f"{p['quantidade_estoque']} {p.get('unidade_medida','Un')}"
+            img_html = (
+                f'<img src="{p["imagem_url"]}" style="max-width:100%;max-height:80px;object-fit:contain;border-radius:6px;">'
+                if p.get("imagem_url") else
+                '<div style="height:80px;display:flex;align-items:center;justify-content:center;opacity:.4;font-size:11px;">Sem foto</div>'
+            )
+            nome_curto = p['nome'] if len(p['nome']) <= 22 else p['nome'][:20] + '…'
+            cards_html.append(f"""
+            <div style="border:1px solid #444;border-radius:10px;padding:8px;text-align:center;
+                        background:var(--card-bg,#1e1e1e);min-height:190px;display:flex;
+                        flex-direction:column;justify-content:space-between;">
+              <div style="height:80px;display:flex;align-items:center;justify-content:center;">{img_html}</div>
+              <div style="font-weight:700;font-size:13px;margin:4px 0;line-height:1.2;">{nome_curto}</div>
+              <div style="font-size:14px;color:#27ae60;font-weight:800;">R$ {p['preco_venda']:.2f}</div>
+              <div style="font-size:11px;color:{badge_color};font-weight:600;">{badge_text}</div>
+            </div>""")
+
+        # Renderiza grid responsivo de 5 colunas em HTML puro
+        grid_css = """
+        <style>
+        .pdv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px;}
+        @media(max-width:1100px){.pdv-grid{grid-template-columns:repeat(4,1fr);}}
+        @media(max-width:800px){.pdv-grid{grid-template-columns:repeat(3,1fr);}}
+        </style>"""
+        st.markdown(grid_css + f'<div class="pdv-grid">{"".join(cards_html)}</div>', unsafe_allow_html=True)
+
+        # ── Formulário compacto para adicionar ao carrinho ─────────────────────
+        st.markdown("---")
+        with st.form("form_add_pdv", clear_on_submit=True):
+            nomes_disponiveis = [p['nome'] for p in prods_filtrados if not (p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)')]
+            ca, cb, cc = st.columns([4, 2, 1])
+            prod_sel = ca.selectbox("Produto", nomes_disponiveis, label_visibility="collapsed",
+                                    placeholder="Selecione o produto…") if nomes_disponiveis else None
+            qtd_add = cb.number_input("Qtd", min_value=0.01, value=1.0, step=1.0,
+                                      label_visibility="collapsed", format="%.2f")
+            add_click = cc.form_submit_button("➕", type="primary", use_container_width=True)
+
+            if add_click and prod_sel:
+                p = next((x for x in prods_filtrados if x['nome'] == prod_sel), None)
+                if p:
+                    if qtd_add > p['quantidade_estoque'] and p.get('categoria') != 'Horta (Ilimitado)':
+                        st.session_state._pdv_msg = ("warning", "Estoque insuficiente!")
+                    else:
+                        # Checa se produto já está no carrinho → incrementa
+                        existente = next((i for i in st.session_state.carrinho if i['produto_id'] == p['id']), None)
+                        if existente:
+                            existente['quantidade'] += float(qtd_add)
+                            existente['subtotal'] = existente['quantidade'] * existente['preco_unitario']
+                            existente['custo'] = existente['quantidade'] * float(p['preco_custo'])
+                        else:
+                            st.session_state.carrinho.append({
+                                "produto_id": p['id'],
+                                "nome": p['nome'],
+                                "quantidade": float(qtd_add),
+                                "preco_unitario": float(p['preco_venda']),
+                                "subtotal": float(qtd_add) * float(p['preco_venda']),
+                                "custo": float(qtd_add) * float(p.get('preco_custo', 0)),
+                                "unidade_medida": p.get('unidade_medida', 'Un'),
+                                "is_estoque_controlado": p.get('categoria') != 'Horta (Ilimitado)',
+                                "categoria": p.get('categoria', ''),
+                            })
+                        st.session_state._pdv_msg = ("success", f"✅ {p['nome']} adicionado!")
+
+    with col_carrinho:
+        st.subheader("🧾 Carrinho")
+
+        # Exibe mensagem de feedback sem rerun
+        if st.session_state._pdv_msg:
+            tipo, msg = st.session_state._pdv_msg
+            if tipo == "success":
+                st.success(msg)
+            elif tipo == "warning":
+                st.warning(msg)
+            st.session_state._pdv_msg = None
+
+        st.markdown("---")
+
+        if not st.session_state.carrinho:
+            st.info("Carrinho vazio.\nBusque e selecione um produto à esquerda.")
+        else:
+            total = 0.0
+            custo_total = 0.0
+            for idx, item in enumerate(st.session_state.carrinho):
+                total += item['subtotal']
+                custo_total += item['custo']
+                c1, c2 = st.columns([4, 1])
+                with c1:
+                    st.markdown(
+                        f"**{item['nome']}**  \n"
+                        f"`{item['quantidade']:.2f} {item['unidade_medida']}` × R$ {item['preco_unitario']:.2f} = **R$ {item['subtotal']:.2f}**"
+                    )
+                with c2:
+                    if st.button("✕", key=f"del_{idx}", help="Remover item"):
+                        st.session_state.carrinho.pop(idx)
+                        # Fragment auto-reruns, sem st.rerun() global
+
+            st.markdown("---")
+            st.markdown(f"### 💰 Total: R$ {total:.2f}")
+
+            forma_pag = st.selectbox("💳 Forma de Pagamento",
+                ["Dinheiro", "PIX", "Cartão de Crédito", "Cartão de Débito"],
+                key="forma_pag_pdv")
+            valor_pago = st.number_input("Valor Recebido (Troco)", min_value=0.0,
+                                          value=float(total), step=0.50, key="valor_pago_pdv")
+            if valor_pago > total:
+                st.success(f"💵 Troco: R$ {valor_pago - total:.2f}")
+
+            if st.button("✅ FINALIZAR VENDA", type="primary", use_container_width=True, key="btn_finalizar"):
+                lucro = total - custo_total
+                # Pré-calcula novo_estoque no cliente (sem precisar buscar do banco)
+                for item in st.session_state.carrinho:
+                    for p in st.session_state.get('produtos_local', []):
+                        if p['id'] == item['produto_id']:
+                            item['novo_estoque'] = max(0.0, p['quantidade_estoque'] - item['quantidade'])
+                            break
+
+                sucesso = db.registrar_venda(total, lucro, forma_pag, st.session_state.carrinho)
+                if sucesso:
+                    # Atualiza cache local de estoque
+                    for item in st.session_state.carrinho:
+                        for p in st.session_state.get('produtos_local', []):
+                            if p['id'] == item['produto_id']:
+                                p['quantidade_estoque'] = item.get('novo_estoque', p['quantidade_estoque'])
+                    st.session_state.carrinho = []
+                    st.success("🎉 Venda registrada com sucesso!")
+                    st.balloons()
+                else:
+                    st.error("Erro ao registrar a venda.")
+
 def render_admin():
     
     st.markdown(f"<style>{css_theme}</style><div style='margin-top: 50px;'></div>", unsafe_allow_html=True)
@@ -74,115 +233,12 @@ def render_admin():
     tab_pdv, tab_estoque, tab_fiado, tab_retiradas, tab_relatorios, tab_solicitacoes = st.tabs(["🛒 Caixa", "📦 Estoque", "📝 Fiado", "🏠 Retiradas", "📊 Relatórios", "🔔 Solicitações"])
     
     # =========================================================
-    # ABA 1: FRENTE DE CAIXA (PDV)
+    # ABA 1: FRENTE DE CAIXA (PDV) — Fragment isolado
     # =========================================================
     with tab_pdv:
-        col_produtos, col_carrinho = st.columns([2, 1])
-        
-        # Inicializa o carrinho na sessão
-        if 'carrinho' not in st.session_state:
-            st.session_state.carrinho = []
-            
-        with col_produtos:
-            st.subheader("Produtos")
-            busca = st.text_input("Buscar Produto (Nome ou Código de Barras):", key="busca_pdv")
-            
-            # Filtra produtos
-            prods_filtrados = produtos
-            if busca:
-                prods_filtrados = [p for p in produtos if busca.lower() in p['nome'].lower() or (p['codigo_barras'] and busca in p['codigo_barras'])]
-                
-            # Exibição em Grid (usando colunas do Streamlit)
-            cols_per_row = 5
-            for i in range(0, len(prods_filtrados), cols_per_row):
-                cols = st.columns(cols_per_row)
-                for j in range(cols_per_row):
-                    if i + j < len(prods_filtrados):
-                        p = prods_filtrados[i+j]
-                        with cols[j]:
-                            # Container com borda (Altura automática que evita scroll, mas fica igual porque o conteúdo tem altura fixa)
-                            with st.container(border=True):
-                                # Imagem com altura controlada e centralizada
-                                if p.get("imagem_url"):
-                                    st.markdown(f'<div style="display: flex; justify-content: center; height: 100px; align-items: center; margin-bottom: 5px;"><img src="{p["imagem_url"]}" style="max-width: 100%; max-height: 100px; object-fit: contain; border-radius: 5px;"></div>', unsafe_allow_html=True)
-                                else:
-                                    st.markdown('<div style="height: 105px;"></div>', unsafe_allow_html=True)
-                                    
-                                # Textos nativos do Streamlit (adaptam automaticamente para Claro/Escuro sem sumir)
-                                # Usa altura fixa de 45px e corta com "..." se passar de 2 linhas
-                                nome_curto = p['nome'] if len(p['nome']) <= 20 else p['nome'][:18] + '...'
-                                st.markdown(f'<div style="height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-weight: bold; font-size: 15px; margin-bottom: 5px; text-align: center;">{nome_curto}</div>', unsafe_allow_html=True)
-                                st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
-                                st.markdown(f'<div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
-                                
-                                # Formulario de adição dentro do mesmo container
-                                qtd = st.number_input("Quantidade", min_value=0.01, value=1.00, step=1.0, key=f"qtd_{p['id']}", label_visibility="collapsed")
-                                
-                                is_out_of_stock = p['quantidade_estoque'] <= 0
-                                if is_out_of_stock:
-                                    st.button("Esgotado", key=f"btn_add_{p['id']}", use_container_width=True, disabled=True)
-                                else:
-                                    if st.button("Adicionar", key=f"btn_add_{p['id']}", use_container_width=True, type="primary"):
-                                        if qtd > p['quantidade_estoque'] and p['categoria'] != 'Horta (Ilimitado)':
-                                            st.warning("Estoque insuficiente!")
-                                        else:
-                                            st.session_state.carrinho.append({
-                                                "produto_id": p['id'],
-                                                "nome": p['nome'],
-                                                "quantidade": float(qtd),
-                                                "preco_unitario": float(p['preco_venda']),
-                                                "subtotal": float(qtd) * float(p['preco_venda']),
-                                                "custo": float(qtd) * float(p['preco_custo']),
-                                                "unidade_medida": p.get('unidade_medida', 'Un')
-                                            })
-                                            st.rerun()
-                                        
-        with col_carrinho:
-            st.subheader("Carrinho")
-            st.markdown("---")
-            
-            if not st.session_state.carrinho:
-                st.info("Carrinho vazio.")
-            else:
-                total = 0.0
-                custo_total = 0.0
-                for idx, item in enumerate(st.session_state.carrinho):
-                    total += item['subtotal']
-                    custo_total += item['custo']
-                    
-                    c1, c2 = st.columns([3, 1])
-                    with c1:
-                        st.markdown(f"**{item['quantidade']} {item['unidade_medida']}** x {item['nome']}<br>R$ {item['subtotal']:.2f}", unsafe_allow_html=True)
-                    with c2:
-                        if st.button("X", key=f"del_item_{idx}", help="Remover"):
-                            st.session_state.carrinho.pop(idx)
-                            st.rerun()
-                            
-                st.markdown("---")
-                st.markdown(f"<h3 style='color: #27ae60; text-align: right;'>Total: R$ {total:.2f}</h3>", unsafe_allow_html=True)
-                
-                # Finalizar Compra
-                forma_pag = st.selectbox("Forma de Pagamento", ["Dinheiro", "PIX", "Cartão de Crédito", "Cartão de Débito"])
-                valor_pago = st.number_input("Valor Recebido (Para Troco)", min_value=0.0, value=float(total), step=1.0)
-                
-                if valor_pago > total:
-                    st.success(f"Troco: R$ {valor_pago - total:.2f}")
-                    
-                if st.button("FINALIZAR VENDA", type="primary", use_container_width=True):
-                    lucro = total - custo_total
-                    sucesso = db.registrar_venda(total, lucro, forma_pag, st.session_state.carrinho)
-                    if sucesso:
-                        st.success("Venda registrada com sucesso!")
-                        # Atualiza estoque no cache local
-                        for item in st.session_state.carrinho:
-                            for p in st.session_state.produtos_local:
-                                if p['id'] == item['produto_id']:
-                                    p['quantidade_estoque'] -= item['quantidade']
-                                    if p['quantidade_estoque'] < 0: p['quantidade_estoque'] = 0
-                        st.session_state.carrinho = [] # Limpa carrinho
-                        st.balloons()
-                    else:
-                        st.error("Erro ao registrar a venda.")
+        render_pdv(produtos)
+
+
     
     # =========================================================
     # ABA 2: GESTÃO DE ESTOQUE
@@ -466,18 +522,23 @@ def render_admin():
                     preco_f = c2.number_input("Preço Unitário", value=float(p_f['preco_venda']), key="preco_fiado")
                     
                     if st.button("Anotar na Conta"):
+                        # Pré-calcula novo_estoque do cache local
+                        novo_est_val = None
+                        for p_loc in st.session_state.get('produtos_local', []):
+                            if p_loc['id'] == p_f['id'] and p_f['categoria'] != 'Horta (Ilimitado)':
+                                novo_est_val = max(0.0, p_loc['quantidade_estoque'] - qtd_f)
                         item = {
                             "produto_id": p_f['id'],
                             "quantidade": qtd_f,
                             "preco_unitario": preco_f,
-                            "is_estoque_controlado": p_f['categoria'] != 'Horta (Ilimitado)'
+                            "is_estoque_controlado": p_f['categoria'] != 'Horta (Ilimitado)',
+                            "novo_estoque": novo_est_val
                         }
                         if db.anotar_compra(cli_selecionado['id'], [item]):
                             st.success("Compra anotada com sucesso!")
                             for p in st.session_state.produtos_local:
-                                if p['id'] == item['produto_id'] and p.get('is_estoque_controlado', True):
-                                    p['quantidade_estoque'] -= item['quantidade']
-                                    if p['quantidade_estoque'] < 0: p['quantidade_estoque'] = 0
+                                if p['id'] == item['produto_id'] and p_f['categoria'] != 'Horta (Ilimitado)':
+                                    p['quantidade_estoque'] = max(0.0, p['quantidade_estoque'] - item['quantidade'])
                             st.rerun()
     
     # =========================================================
@@ -506,18 +567,23 @@ def render_admin():
                 st.markdown(f"**Custo Estimado da Retirada:** R$ {qtd_r * p_r['preco_custo']:.2f}")
                 
                 if st.button("Registrar Retirada", type="primary"):
+                    # Pré-calcula novo_estoque do cache local
+                    novo_est_r = None
+                    for p_loc in st.session_state.get('produtos_local', []):
+                        if p_loc['id'] == p_r['id'] and p_r['categoria'] != 'Horta (Ilimitado)':
+                            novo_est_r = max(0.0, p_loc['quantidade_estoque'] - qtd_r)
                     item_r = {
                         "produto_id": p_r['id'],
                         "quantidade": qtd_r,
                         "preco_custo": p_r['preco_custo'],
-                        "is_estoque_controlado": p_r['categoria'] != 'Horta (Ilimitado)'
+                        "is_estoque_controlado": p_r['categoria'] != 'Horta (Ilimitado)',
+                        "novo_estoque": novo_est_r
                     }
                     if db.registrar_retirada_casa([item_r]):
                         st.success("Retirada registrada!")
                         for p in st.session_state.produtos_local:
-                            if p['id'] == item_r['produto_id'] and p.get('is_estoque_controlado', True):
-                                p['quantidade_estoque'] -= item_r['quantidade']
-                                if p['quantidade_estoque'] < 0: p['quantidade_estoque'] = 0
+                            if p['id'] == item_r['produto_id'] and p_r['categoria'] != 'Horta (Ilimitado)':
+                                p['quantidade_estoque'] = max(0.0, p['quantidade_estoque'] - item_r['quantidade'])
                         st.rerun()
                         
         with col_ret_hist:
