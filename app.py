@@ -72,12 +72,15 @@ def render_pdv(produtos):
     if '_pdv_msg' not in st.session_state:
         st.session_state._pdv_msg = None
 
-    # Inicializa sessão para produto selecionado
-    if 'pdv_prod_sel_id' not in st.session_state:
-        st.session_state.pdv_prod_sel_id = None
+    # Inicializa sessão para produtos selecionados
+    if 'pdv_prod_sel_ids' not in st.session_state:
+        st.session_state.pdv_prod_sel_ids = []
 
-    def set_prod_sel(pid):
-        st.session_state.pdv_prod_sel_id = pid
+    def toggle_prod_sel(pid):
+        if pid in st.session_state.pdv_prod_sel_ids:
+            st.session_state.pdv_prod_sel_ids.remove(pid)
+        else:
+            st.session_state.pdv_prod_sel_ids.append(pid)
 
     col_produtos, col_carrinho = st.columns([3, 2])
 
@@ -95,39 +98,56 @@ def render_pdv(produtos):
             or (p.get('codigo_barras') and busca in str(p['codigo_barras']))
         ]
         
-        # Produto atualmente selecionado
-        p_sel = next((p for p in produtos if p['id'] == st.session_state.pdv_prod_sel_id), None)
-        nome_sel = p_sel['nome'] if p_sel else "Nenhum selecionado"
+        # Produtos atualmente selecionados
+        p_selecionados = [p for p in produtos if p['id'] in st.session_state.pdv_prod_sel_ids]
+        if not p_selecionados:
+            nome_sel = "Nenhum selecionado"
+        elif len(p_selecionados) == 1:
+            nome_sel = p_selecionados[0]['nome']
+        else:
+            nome_sel = f"{len(p_selecionados)} produtos selecionados"
         
         fb.text_input("Produto", value=nome_sel, disabled=True, label_visibility="collapsed")
         qtd_add = fc.number_input("Qtd", min_value=0.01, value=1.0, step=1.0, label_visibility="collapsed", format="%.2f", key="qtd_add_pdv")
         add_click = fd.button("➕", type="primary", use_container_width=True)
 
         if add_click:
-            if not p_sel:
-                st.session_state._pdv_msg = ("warning", "Selecione um produto primeiro clicando abaixo!")
-            elif qtd_add > p_sel['quantidade_estoque'] and p_sel.get('categoria') != 'Horta (Ilimitado)':
-                st.session_state._pdv_msg = ("warning", "Estoque insuficiente!")
+            if not p_selecionados:
+                st.session_state._pdv_msg = ("warning", "Selecione pelo menos um produto clicando abaixo!")
             else:
-                existente = next((i for i in st.session_state.carrinho if i['produto_id'] == p_sel['id']), None)
-                if existente:
-                    existente['quantidade'] += float(qtd_add)
-                    existente['subtotal'] = existente['quantidade'] * existente['preco_unitario']
-                    existente['custo'] = existente['quantidade'] * float(p_sel['preco_custo'])
+                erros = []
+                sucessos = []
+                for p_sel in p_selecionados:
+                    if qtd_add > p_sel['quantidade_estoque'] and p_sel.get('categoria') != 'Horta (Ilimitado)':
+                        erros.append(f"{p_sel['nome']} (Estoque)")
+                    else:
+                        existente = next((i for i in st.session_state.carrinho if i['produto_id'] == p_sel['id']), None)
+                        if existente:
+                            existente['quantidade'] += float(qtd_add)
+                            existente['subtotal'] = existente['quantidade'] * existente['preco_unitario']
+                            existente['custo'] = existente['quantidade'] * float(p_sel['preco_custo'])
+                        else:
+                            st.session_state.carrinho.append({
+                                "produto_id": p_sel['id'],
+                                "nome": p_sel['nome'],
+                                "quantidade": float(qtd_add),
+                                "preco_unitario": float(p_sel['preco_venda']),
+                                "subtotal": float(qtd_add) * float(p_sel['preco_venda']),
+                                "custo": float(qtd_add) * float(p_sel.get('preco_custo', 0)),
+                                "unidade_medida": p_sel.get('unidade_medida', 'Un'),
+                                "is_estoque_controlado": p_sel.get('categoria') != 'Horta (Ilimitado)',
+                                "categoria": p_sel.get('categoria', ''),
+                            })
+                        sucessos.append(p_sel['nome'])
+                
+                if sucessos and not erros:
+                    st.session_state._pdv_msg = ("success", f"✅ {len(sucessos)} produto(s) adicionado(s)!")
+                elif sucessos and erros:
+                    st.session_state._pdv_msg = ("warning", f"✅ {len(sucessos)} adicionados. ⚠️ Erro em: {', '.join(erros)}")
                 else:
-                    st.session_state.carrinho.append({
-                        "produto_id": p_sel['id'],
-                        "nome": p_sel['nome'],
-                        "quantidade": float(qtd_add),
-                        "preco_unitario": float(p_sel['preco_venda']),
-                        "subtotal": float(qtd_add) * float(p_sel['preco_venda']),
-                        "custo": float(qtd_add) * float(p_sel.get('preco_custo', 0)),
-                        "unidade_medida": p_sel.get('unidade_medida', 'Un'),
-                        "is_estoque_controlado": p_sel.get('categoria') != 'Horta (Ilimitado)',
-                        "categoria": p_sel.get('categoria', ''),
-                    })
-                st.session_state._pdv_msg = ("success", f"✅ {p_sel['nome']} adicionado!")
-                st.session_state.pdv_prod_sel_id = None # Limpa a seleção
+                    st.session_state._pdv_msg = ("warning", f"⚠️ Erro: {', '.join(erros)}")
+                
+                st.session_state.pdv_prod_sel_ids = [] # Limpa a seleção
                 st.rerun(scope="fragment")
 
         st.markdown("---")
@@ -165,10 +185,10 @@ def render_pdv(produtos):
                                     st.button("Esgotado", key=f"pdv_btn_{p['id']}", disabled=True, use_container_width=True)
                                 else:
                                     st.markdown(f'<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:10px;">Estoque: {p["quantidade_estoque"]}</div>', unsafe_allow_html=True)
-                                    is_selected = (st.session_state.pdv_prod_sel_id == p['id'])
+                                    is_selected = (p['id'] in st.session_state.pdv_prod_sel_ids)
                                     btn_label = "✅ Selecionado" if is_selected else "Selecionar"
                                     btn_type = "primary" if is_selected else "secondary"
-                                    st.button(btn_label, key=f"pdv_btn_{p['id']}", type=btn_type, on_click=set_prod_sel, args=(p['id'],), use_container_width=True)
+                                    st.button(btn_label, key=f"pdv_btn_{p['id']}", type=btn_type, on_click=toggle_prod_sel, args=(p['id'],), use_container_width=True)
         else:
             st.info("Nenhum produto encontrado com essa busca.")
 
