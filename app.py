@@ -112,25 +112,33 @@ def render_pdv(produtos):
         st.subheader("🛒 Produtos")
 
         # ── Linha superior: Apenas Busca ─────────────
+        import difflib
         busca = st.text_input("🔍 Buscar", key="busca_pdv_frag", placeholder="Pesquisa automática por nome ou código...")
         
-        prods_filtrados = [
-            p for p in produtos
-            if not busca
-            or busca.lower() in p['nome'].lower()
-            or (p.get('codigo_barras') and busca in str(p['codigo_barras']))
-        ]
+        prods_filtrados = produtos
+        if busca:
+            busca_lower = busca.lower()
+            def get_score(p):
+                nome_lower = p['nome'].lower()
+                cod = str(p.get('codigo_barras', '')).lower()
+                # Match exato ou contido tem pontuação máxima (1.0)
+                if busca_lower in nome_lower or busca_lower in cod:
+                    return 1.0
+                # Fuzzy match para achar digitando um pouco errado
+                score_nome = difflib.SequenceMatcher(None, busca_lower, nome_lower).ratio()
+                score_cod = difflib.SequenceMatcher(None, busca_lower, cod).ratio() if cod else 0
+                return max(score_nome, score_cod)
+
+            prods_avaliados = [(p, get_score(p)) for p in produtos]
+            # Filtra por similaridade > 0.4 e ordena
+            prods_filtrados = [p for p, score in sorted(prods_avaliados, key=lambda x: x[1], reverse=True) if score > 0.4]
         
         st.markdown("---")
         
-        # ── Grid nativo do Streamlit (rápido com limite de 20 itens) ──────────
+        # ── Grid nativo do Streamlit ──────────
         if prods_filtrados:
-            MAX_DISPLAY = 20
-            exibir = prods_filtrados[:MAX_DISPLAY]
+            exibir = prods_filtrados
             
-            if len(prods_filtrados) > MAX_DISPLAY:
-                st.caption(f"⚠️ Mostrando {MAX_DISPLAY} de {len(prods_filtrados)} produtos. Digite para filtrar mais.")
-                
             cols_per_row = 4
             for i in range(0, len(exibir), cols_per_row):
                 cols = st.columns(cols_per_row)
