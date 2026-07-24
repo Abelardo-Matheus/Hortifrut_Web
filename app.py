@@ -515,26 +515,53 @@ def render_admin():
                         except:
                             data_fmt = c['data_hora']
                             
-                        nome_prod = c['produtos']['nome'] if c.get('produtos') else 'Produto Excluído'
+                        if not c.get('produto_id') and c['preco_unitario'] < 0:
+                            nome_prod = "Pagamento Parcial"
+                        else:
+                            nome_prod = c['produtos']['nome'] if c.get('produtos') else 'Produto Excluído'
+                            
                         un_medida = c['produtos'].get('unidade_medida', '') if c.get('produtos') else ''
                         
-                        col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+                        col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 1, 1])
                         col1.write(f"📅 {data_fmt} - **{nome_prod}**")
-                        col2.write(f"{c['quantidade']} {un_medida} x R$ {c['preco_unitario']:.2f}")
-                        col3.write(f"💰 **R$ {c['quantidade'] * c['preco_unitario']:.2f}**")
-                        if col4.button("🗑️", key=f"del_fiado_{c['id']}"):
+                        
+                        if c['preco_unitario'] < 0:
+                            col2.write("")
+                            col3.write(f"💰 **- R$ {abs(c['quantidade'] * c['preco_unitario']):.2f}**")
+                        else:
+                            col2.write(f"{c['quantidade']} {un_medida} x R$ {c['preco_unitario']:.2f}")
+                            col3.write(f"💰 **R$ {c['quantidade'] * c['preco_unitario']:.2f}**")
+                            
+                        if col4.button("🗑️", key=f"del_fiado_{c['id']}", help="Excluir item e devolver ao estoque"):
                             if db.excluir_compra_anotada(c['id']):
                                 st.success("Item excluído e estoque devolvido!")
                                 import time; time.sleep(0.5); st.rerun()
                                 
+                        if col5.button("💲", key=f"pagar_fiado_{c['id']}", help="Pagar apenas este item"):
+                            if db.pagar_item_unico(c['id']):
+                                st.success("Item pago com sucesso!")
+                                import time; time.sleep(0.5); st.rerun()
+                                
                     st.markdown("---")
                     
-                    if st.button("Pagar Conta (Quitar tudo)", type="primary"):
-                        ids = [c['id'] for c in compras]
-                        if db.pagar_compras(ids, total_devendo, 0):
-                            st.success("Conta paga com sucesso!")
-                            st.balloons()
-                            st.rerun()
+                    c_pagar_tudo, c_pagar_parcial = st.columns([1, 1])
+                    
+                    with c_pagar_tudo:
+                        st.markdown("#### Quitar Tudo")
+                        if st.button("Pagar Conta Inteira", type="primary", use_container_width=True):
+                            ids = [c['id'] for c in compras]
+                            if db.pagar_compras(ids, total_devendo, 0):
+                                st.success("Conta paga com sucesso!")
+                                st.balloons()
+                                st.rerun()
+                                
+                    with c_pagar_parcial:
+                        st.markdown("#### Pagamento Parcial")
+                        val_parcial = st.number_input("Valor Pago (R$)", min_value=0.01, max_value=float(total_devendo), step=1.0)
+                        if st.button("Registrar Valor", use_container_width=True):
+                            if db.registrar_pagamento_parcial_fiado(cli_selecionado['id'], val_parcial):
+                                st.success(f"Pagamento de R$ {val_parcial:.2f} registrado!")
+                                import time; time.sleep(0.5); st.rerun()
                 else:
                     st.success("Este cliente não tem dívidas em aberto!")
                     

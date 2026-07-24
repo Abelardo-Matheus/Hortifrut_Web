@@ -505,3 +505,26 @@ def get_relatorio_producao_propria(mes, ano):
     except Exception as e:
         print('Erro ao buscar relatorio producao propria:', e)
         return []
+
+def pagar_item_unico(compra_id):
+    try:
+        resp = supabase.table('compras_anotadas').select('*, produtos(*)').eq('id', compra_id).execute()
+        if not resp.data: return False
+        c = resp.data[0]
+        if c['pago']: return True
+        val_total = float(c['quantidade']) * float(c['preco_unitario'])
+        custo = float(c['quantidade']) * float(c['produtos']['preco_custo']) if c.get('produtos') else 0
+        lucro = val_total - custo
+        supabase.table('vendas').insert({'valor_total': val_total, 'lucro_total': lucro, 'forma_pagamento': 'Fiado Pago'}).execute()
+        supabase.table('compras_anotadas').update({'pago': True}).eq('id', compra_id).execute()
+        return True
+    except Exception as e:
+        print(e); return False
+
+def registrar_pagamento_parcial_fiado(cliente_id, valor):
+    try:
+        supabase.table('vendas').insert({'valor_total': float(valor), 'lucro_total': float(valor), 'forma_pagamento': 'Fiado Pago (Parcial)'}).execute()
+        supabase.table('compras_anotadas').insert({'cliente_id': cliente_id, 'quantidade': 1.0, 'preco_unitario': -float(valor), 'pago': False}).execute()
+        return True
+    except Exception as e:
+        print(e); return False
