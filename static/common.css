@@ -191,3 +191,22 @@
     width: 32px;
     height: 32px;
 }
+
+/* =================================================================
+   ESTILO PARA A ABA DE EDIÇÃO (POPOVER)
+   Fixa o tamanho e remove o scroll interno quando há zoom
+   ================================================================= */
+div[data-testid="stPopoverBody"] {
+    width: 500px !important;
+    min-width: 500px !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: 20px !important;
+}
+
+@media (max-width: 768px) {
+    div[data-testid="stPopoverBody"] {
+        width: 92vw !important;
+        min-width: 92vw !important;
+    }
+}
