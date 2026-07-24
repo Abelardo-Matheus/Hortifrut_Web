@@ -34,11 +34,10 @@ def modal_login():
         if st.form_submit_button("Entrar", type="primary", use_container_width=True):
             if db.verificar_login(usuario, senha):
                 st.session_state.logged_in = True
-                st.session_state.show_admin = True
                 controller.set("auth_token", "hortifrut_admin_ok", max_age=31536000)
                 import time
                 time.sleep(0.5)
-                st.rerun()
+                st.switch_page(pg_admin)
             else:
                 st.error("Usuário ou senha incorretos")
 
@@ -735,13 +734,7 @@ if 'logged_in' not in st.session_state:
 if 'show_admin' not in st.session_state:
     st.session_state.show_admin = False
 
-if st.session_state.show_admin:
-    render_admin()
-else:
-    # ==========================================
-    # VITRINE PÚBLICA (CLIENTES)
-    # ==========================================
-
+def page_public():
     import os
     index_path = os.path.join(os.path.dirname(__file__), "index.html")
     if os.path.exists(index_path):
@@ -845,7 +838,6 @@ else:
         html_cards.append(card)
 
     # Injeta os cards na parte inferior do index.html
-    # Suporta tanto <!-- PLACEHOLDER_CARDS --> quanto {html_cards} por retrocompatibilidade
     html_bot = part_bot.replace("<!-- PLACEHOLDER_CARDS -->", "".join(html_cards)) \
                        .replace("{html_cards}", "".join(html_cards))
     if html_bot.strip():
@@ -853,25 +845,38 @@ else:
 
     st.markdown("---")
 
+def page_admin():
+    if not st.session_state.logged_in:
+        st.warning("Acesso restrito. Redirecionando para a vitrine...")
+        import time; time.sleep(1)
+        st.switch_page(pg_home)
+    else:
+        render_admin()
+
+# Definição e execução da Navegação
+pg_home = st.Page(page_public, title="JeMpagina inicial", url_path="JeMpagina-inicial", default=True)
+pg_admin = st.Page(page_admin, title="JeMadmin", url_path="JeMadmin")
+
+pg = st.navigation([pg_home, pg_admin], position="hidden")
+pg.run()
+
 # ── Botões funcionais do Streamlit (ficam ocultos via JS/Marker) ────
 # Deixamos no final do arquivo para que não ocupem espaço (margem preta) 
 # no topo da página antes do vídeo renderizar.
 with st.container():
     st.markdown("<div id='hf-hidden-btns-marker' style='display:none'></div>", unsafe_allow_html=True)
     
-    if st.session_state.show_admin:
+    if pg.url_path == "JeMadmin":
         if st.button("🔓", key="st_btn_admin"):
             st.session_state.logged_in = False
-            st.session_state.show_admin = False
             controller.remove("auth_token")
             import time; time.sleep(0.3)
-            st.rerun()
+            st.switch_page(pg_home)
     else:
         icon = "⚙️" if st.session_state.logged_in else "🔐"
         if st.button(icon, key="st_btn_admin"):
             if st.session_state.logged_in:
-                st.session_state.show_admin = True
-                st.rerun()
+                st.switch_page(pg_admin)
             else:
                 modal_login()
 
@@ -883,7 +888,7 @@ with st.container():
 # ── Portal visual — box fixa superior ───────────────────────────────
 import streamlit.components.v1 as _components
 
-if st.session_state.show_admin:
+if pg.url_path == "JeMadmin":
     _admin_icon = "🔓"
 else:
     _admin_icon = "⚙️" if st.session_state.logged_in else "🔐"
