@@ -97,8 +97,9 @@ def render_pdv(produtos):
                 "categoria": p.get('categoria', ''),
             })
         st.session_state._pdv_msg = ("success", f"✅ {p['nome']} adicionado!")
-        # Reseta o número no input de quantidade após adicionar
-        st.session_state[f"pdv_qtd_{p['id']}"] = 1.0
+        # Reseta o número no input de quantidade após adicionar deletando a chave
+        if f"pdv_qtd_{p['id']}" in st.session_state:
+            del st.session_state[f"pdv_qtd_{p['id']}"]
 
     col_produtos, col_carrinho = st.columns([3, 2])
 
