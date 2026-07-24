@@ -166,7 +166,7 @@ def render_pdv(produtos):
                                     if p.get('producao_propria'):
                                         st.markdown('<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: Disponível</div>', unsafe_allow_html=True)
                                     else:
-                                        st.markdown(f'<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: {p["quantidade_estoque"]}</div>', unsafe_allow_html=True)
+                                        st.markdown(f'<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
                                     
                                     if p.get('unidade_medida', '').lower() == 'kg':
                                         st.markdown('<div style="font-size:11px;text-align:center;margin-bottom:-10px;margin-top:-5px;">Valor (R$)</div>', unsafe_allow_html=True)
@@ -280,7 +280,7 @@ def render_admin():
                 c4, c5, c6, c7, c8 = st.columns(5)
                 custo = c4.number_input("Preço de Custo (R$)", min_value=0.0, step=0.1)
                 venda = c5.number_input("Preço de Venda (R$) *", min_value=0.0, step=0.1)
-                estoque = c6.number_input("Estoque Inicial", min_value=0.0, step=1.0)
+                estoque = c6.number_input("Estoque Inicial", min_value=0.0, step=0.01, format="%.3f")
                 data_compra = c7.text_input("Data de Compra", placeholder="Ex: 02/06/2026")
                 unidade_medida = c8.selectbox("Vendido por", ["Un", "Kg"])
                 
@@ -403,7 +403,7 @@ def render_admin():
                                         e_custo = colA.number_input("Custo", value=float(p['preco_custo']), step=0.1)
                                         e_venda = colB.number_input("Venda", value=float(p['preco_venda']), step=0.1)
                                         
-                                        e_estoque = st.number_input("Estoque", value=float(p['quantidade_estoque']), step=1.0)
+                                        e_estoque = st.number_input("Estoque", value=float(p['quantidade_estoque']), step=0.01, format="%.3f")
                                         e_prod_propria = st.checkbox("Produção Própria", value=p.get('producao_propria', False), key=f"pp_edit_{p['id']}")
                                         e_img = st.file_uploader("Trocar Foto (Opcional)", type=["png", "jpg", "jpeg"], key=f"img_edit_{p['id']}")
                                         
