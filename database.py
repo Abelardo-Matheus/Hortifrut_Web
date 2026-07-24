@@ -41,6 +41,7 @@ def verificar_login(usuario, senha):
 # CRUD DE PRODUTOS
 # ==========================================
 
+@st.cache_data(ttl=300)
 def get_produtos():
     """Retorna todos os produtos cadastrados ordenados pelo nome"""
     try:
@@ -64,6 +65,7 @@ def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, 
             "unidade_medida": unidade_medida
         }
         supabase.table("produtos").insert(data).execute()
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao adicionar produto: {e}")
@@ -83,6 +85,7 @@ def atualizar_produto(produto_id, nome, codigo_barras, categoria, preco_custo, p
             "unidade_medida": unidade_medida
         }
         supabase.table("produtos").update(data).eq("id", produto_id).execute()
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao atualizar produto: {e}")
@@ -92,6 +95,7 @@ def excluir_produto(produto_id):
     """Exclui um produto do banco de dados"""
     try:
         supabase.table("produtos").delete().eq("id", produto_id).execute()
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao excluir produto: {e}")
@@ -145,6 +149,7 @@ def registrar_venda(valor_total, lucro_total, forma_pagamento, itens):
                     # Atualiza o estoque
                     supabase.table("produtos").update({"quantidade_estoque": novo_estoque}).eq("id", prod_id).execute()
                     
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao registrar venda: {e}")
@@ -208,6 +213,7 @@ def anotar_compra(cliente_id, itens):
                 if prod_data.data:
                     novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - qtd)
                     supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao anotar compra: {e}")
@@ -255,6 +261,7 @@ def excluir_compra_anotada(compra_id):
                 
         # 2. Exclui a anotação
         supabase.table("compras_anotadas").delete().eq("id", compra_id).execute()
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao excluir fiado: {e}")
@@ -283,6 +290,7 @@ def registrar_retirada_casa(itens):
                 if prod_data.data:
                     novo_est = max(0.0, prod_data.data[0]['quantidade_estoque'] - qtd)
                     supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao registrar retirada: {e}")
@@ -323,6 +331,7 @@ def excluir_retirada_casa(retirada_id):
                 supabase.table("produtos").update({"quantidade_estoque": novo_est}).eq("id", prod_id).execute()
                 
         supabase.table("retiradas_casa").delete().eq("id", retirada_id).execute()
+        get_produtos.clear()
         return True
     except Exception as e:
         st.error(f"Erro ao excluir retirada: {e}")
