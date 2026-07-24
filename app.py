@@ -76,16 +76,51 @@ def render_pdv(produtos):
 
     with col_produtos:
         st.subheader("🛒 Produtos")
-        busca = st.text_input("🔍 Buscar por nome ou código:", key="busca_pdv_frag", placeholder="Ex: Maçã, 7891...")
 
-        prods_filtrados = [
-            p for p in produtos
-            if not busca
-            or busca.lower() in p['nome'].lower()
-            or (p.get('codigo_barras') and busca in str(p['codigo_barras']))
-        ]
+        # ── Linha superior: Busca + Adicionar ao carrinho juntos ─────────────
+        with st.form("form_add_pdv", clear_on_submit=True):
+            fa, fb, fc, fd = st.columns([3, 3, 1, 1])
+            busca = fa.text_input("🔍 Buscar", key="busca_pdv_frag", placeholder="Nome ou código...", label_visibility="collapsed")
+            
+            prods_filtrados = [
+                p for p in produtos
+                if not busca
+                or busca.lower() in p['nome'].lower()
+                or (p.get('codigo_barras') and busca in str(p['codigo_barras']))
+            ]
 
-        # ── Injeção de CSS separada (necessário antes do grid) ───────────────
+            nomes_disponiveis = [p['nome'] for p in prods_filtrados if not (p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)')]
+            prod_sel = fb.selectbox("Produto", nomes_disponiveis, label_visibility="collapsed",
+                                    placeholder="Selecione o produto…") if nomes_disponiveis else fb.selectbox("Produto", [], label_visibility="collapsed")
+            qtd_add = fc.number_input("Qtd", min_value=0.01, value=1.0, step=1.0, label_visibility="collapsed", format="%.2f")
+            add_click = fd.form_submit_button("➕ Add", type="primary", use_container_width=True)
+
+            if add_click and prod_sel:
+                p = next((x for x in prods_filtrados if x['nome'] == prod_sel), None)
+                if p:
+                    if qtd_add > p['quantidade_estoque'] and p.get('categoria') != 'Horta (Ilimitado)':
+                        st.session_state._pdv_msg = ("warning", "Estoque insuficiente!")
+                    else:
+                        existente = next((i for i in st.session_state.carrinho if i['produto_id'] == p['id']), None)
+                        if existente:
+                            existente['quantidade'] += float(qtd_add)
+                            existente['subtotal'] = existente['quantidade'] * existente['preco_unitario']
+                            existente['custo'] = existente['quantidade'] * float(p['preco_custo'])
+                        else:
+                            st.session_state.carrinho.append({
+                                "produto_id": p['id'],
+                                "nome": p['nome'],
+                                "quantidade": float(qtd_add),
+                                "preco_unitario": float(p['preco_venda']),
+                                "subtotal": float(qtd_add) * float(p['preco_venda']),
+                                "custo": float(qtd_add) * float(p.get('preco_custo', 0)),
+                                "unidade_medida": p.get('unidade_medida', 'Un'),
+                                "is_estoque_controlado": p.get('categoria') != 'Horta (Ilimitado)',
+                                "categoria": p.get('categoria', ''),
+                            })
+                        st.session_state._pdv_msg = ("success", f"✅ {p['nome']} adicionado!")
+
+        # ── CSS do grid ──────────────────────────────────────────────────────
         st.markdown(
             "<style>"
             ".pdv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px;}"
@@ -97,12 +132,11 @@ def render_pdv(produtos):
             ".pdv-card-nome{font-weight:700;font-size:13px;margin:4px 0;line-height:1.2;}"
             ".pdv-card-preco{font-size:15px;color:#27ae60;font-weight:800;}"
             ".pdv-card-badge{font-size:11px;font-weight:600;margin-top:2px;}"
-            ".pdv-sem-foto{height:80px;display:flex;align-items:center;justify-content:center;opacity:.4;font-size:11px;}"
             "</style>",
             unsafe_allow_html=True
         )
 
-        # ── Grid HTML puro: uma única st.markdown call para todos os produtos ──
+        # ── Grid HTML puro ────────────────────────────────────────────────────
         cards_html = []
         for p in prods_filtrados:
             esgotado = p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)'
@@ -129,42 +163,6 @@ def render_pdv(produtos):
         st.markdown(f'<div class="pdv-grid">{all_cards}</div>', unsafe_allow_html=True)
 
 
-        # ── Formulário compacto para adicionar ao carrinho ─────────────────────
-        st.markdown("---")
-        with st.form("form_add_pdv", clear_on_submit=True):
-            nomes_disponiveis = [p['nome'] for p in prods_filtrados if not (p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)')]
-            ca, cb, cc = st.columns([4, 2, 1])
-            prod_sel = ca.selectbox("Produto", nomes_disponiveis, label_visibility="collapsed",
-                                    placeholder="Selecione o produto…") if nomes_disponiveis else None
-            qtd_add = cb.number_input("Qtd", min_value=0.01, value=1.0, step=1.0,
-                                      label_visibility="collapsed", format="%.2f")
-            add_click = cc.form_submit_button("➕", type="primary", use_container_width=True)
-
-            if add_click and prod_sel:
-                p = next((x for x in prods_filtrados if x['nome'] == prod_sel), None)
-                if p:
-                    if qtd_add > p['quantidade_estoque'] and p.get('categoria') != 'Horta (Ilimitado)':
-                        st.session_state._pdv_msg = ("warning", "Estoque insuficiente!")
-                    else:
-                        # Checa se produto já está no carrinho → incrementa
-                        existente = next((i for i in st.session_state.carrinho if i['produto_id'] == p['id']), None)
-                        if existente:
-                            existente['quantidade'] += float(qtd_add)
-                            existente['subtotal'] = existente['quantidade'] * existente['preco_unitario']
-                            existente['custo'] = existente['quantidade'] * float(p['preco_custo'])
-                        else:
-                            st.session_state.carrinho.append({
-                                "produto_id": p['id'],
-                                "nome": p['nome'],
-                                "quantidade": float(qtd_add),
-                                "preco_unitario": float(p['preco_venda']),
-                                "subtotal": float(qtd_add) * float(p['preco_venda']),
-                                "custo": float(qtd_add) * float(p.get('preco_custo', 0)),
-                                "unidade_medida": p.get('unidade_medida', 'Un'),
-                                "is_estoque_controlado": p.get('categoria') != 'Horta (Ilimitado)',
-                                "categoria": p.get('categoria', ''),
-                            })
-                        st.session_state._pdv_msg = ("success", f"✅ {p['nome']} adicionado!")
 
     with col_carrinho:
         st.subheader("🧾 Carrinho")
