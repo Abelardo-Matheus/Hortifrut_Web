@@ -76,7 +76,13 @@ def render_pdv(produtos):
         qtd_input = st.session_state.get(f"pdv_qtd_{p['id']}", 1.0)
         
         if p.get('unidade_medida', '').lower() == 'kg':
-            qtd_add = float(qtd_input) / float(p['preco_venda'])
+            if qtd_input <= 0.0:
+                st.session_state._pdv_msg = ("warning", "Por favor, digite o peso!")
+                return
+            if float(qtd_input).is_integer():
+                qtd_add = float(qtd_input) / 100.0
+            else:
+                qtd_add = float(qtd_input)
         else:
             qtd_add = float(qtd_input)
             
@@ -169,8 +175,8 @@ def render_pdv(produtos):
                                         st.markdown(f'<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
                                     
                                     if p.get('unidade_medida', '').lower() == 'kg':
-                                        st.markdown('<div style="font-size:11px;text-align:center;margin-bottom:-10px;margin-top:-5px;">Valor (R$)</div>', unsafe_allow_html=True)
-                                        st.number_input("Valor R$", min_value=0.01, value=float(p['preco_venda']), step=0.50, label_visibility="collapsed", format="%.2f", key=f"pdv_qtd_{p['id']}")
+                                        st.markdown('<div style="font-size:11px;text-align:center;margin-bottom:-10px;margin-top:-5px;">Peso (Kg)</div>', unsafe_allow_html=True)
+                                        st.number_input("Peso Kg", min_value=0.00, value=0.00, step=0.01, label_visibility="collapsed", format="%.2f", key=f"pdv_qtd_{p['id']}")
                                     else:
                                         st.number_input("Qtd", min_value=0.01, value=1.0, step=1.0, label_visibility="collapsed", format="%.2f", key=f"pdv_qtd_{p['id']}")
                                     st.button("➕ Add", key=f"pdv_add_{p['id']}", type="primary", on_click=add_to_cart_callback, args=(p,), use_container_width=True)
@@ -578,14 +584,23 @@ def render_admin():
                     
                     c1, c2 = st.columns(2)
                     is_kg = p_f.get('unidade_medida', '').lower() == 'kg'
-                    lbl_qtd = "Valor R$" if is_kg else "Quantidade"
+                    lbl_qtd = "Peso (Kg)" if is_kg else "Quantidade"
                     
-                    qtd_f = c1.number_input(lbl_qtd, min_value=0.01, value=float(p_f['preco_venda']) if is_kg else 1.00, key="qtd_fiado")
+                    qtd_f = c1.number_input(lbl_qtd, min_value=0.00, value=0.00 if is_kg else 1.00, key="qtd_fiado")
                     preco_f = c2.number_input("Preço Unitário", value=float(p_f['preco_venda']), key="preco_fiado")
                     
                     if st.button("Anotar na Conta"):
-                        qtd_final = (qtd_f / preco_f) if (is_kg and preco_f > 0) else qtd_f
-                        
+                        if is_kg:
+                            if qtd_f <= 0:
+                                st.error("Por favor, digite o peso!")
+                                st.stop()
+                            if float(qtd_f).is_integer():
+                                qtd_final = float(qtd_f) / 100.0
+                            else:
+                                qtd_final = float(qtd_f)
+                        else:
+                            qtd_final = qtd_f
+                            
                         # Pré-calcula novo_estoque do cache local
                         novo_est_val = None
                         is_est_ctrl = p_f['categoria'] != 'Horta (Ilimitado)' and not p_f.get('producao_propria')
