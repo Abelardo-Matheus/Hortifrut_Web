@@ -12,7 +12,7 @@ st.set_page_config(
 import database as db
 
 from streamlit_cookies_controller import CookieController
-controller = CookieController()
+controller = CookieController(key='cookies')
 
 # Verifica o cookie de login
 if "logged_in" not in st.session_state:
@@ -208,17 +208,20 @@ def render_admin():
                                 def process_and_upload(img_bytes, filename, prod_nome, prod_cod):
                                     try:
                                         import io
-                                        import urllib.parse
+                                        import time
+                                        import uuid
                                         from PIL import Image
                                         from rembg import remove
                                         from database import supabase
                                         
                                         # Salva original primeiro
-                                        safe_name = urllib.parse.quote(filename)
+                                        ext = filename.split('.')[-1] if '.' in filename else 'jpg'
+                                        safe_name = f"img_{int(time.time())}_{uuid.uuid4().hex[:8]}.{ext}"
+                                        
                                         supabase.storage.from_("produtos").upload(
                                             path=safe_name,
                                             file=img_bytes,
-                                            file_options={"content-type": "image/jpeg"}
+                                            file_options={"content-type": f"image/{ext}", "upsert": "true"}
                                         )
                                         url_original = supabase.storage.from_("produtos").get_public_url(safe_name)
                                         
@@ -243,7 +246,7 @@ def render_admin():
                                         supabase.storage.from_("produtos").upload(
                                             path=new_name,
                                             file=out_bytes.read(),
-                                            file_options={"content-type": "image/png"}
+                                            file_options={"content-type": "image/png", "upsert": "true"}
                                         )
                                         url_nobg = supabase.storage.from_("produtos").get_public_url(new_name)
                                         
@@ -315,15 +318,14 @@ def render_admin():
                                                     import threading
                                                     def process_edit_upload(i_bytes, fname, p_id):
                                                         try:
-                                                            import io, urllib.parse, time
+                                                            import io, time, uuid
                                                             from PIL import Image
                                                             from rembg import remove
                                                             from database import supabase
                                                             
                                                             # Generate unique name
                                                             ext = fname.split('.')[-1] if '.' in fname else 'jpg'
-                                                            unique_name = f"{p_id}_{int(time.time())}.{ext}"
-                                                            safe_name = urllib.parse.quote(unique_name)
+                                                            safe_name = f"{p_id}_{int(time.time())}_{uuid.uuid4().hex[:8]}.{ext}"
                                                             
                                                             supabase.storage.from_("produtos").upload(path=safe_name, file=i_bytes, file_options={"content-type": f"image/{ext}", "upsert": "true"})
                                                             url_orig = supabase.storage.from_("produtos").get_public_url(safe_name)
@@ -839,29 +841,7 @@ _components.html(f"""
 
     doc.getElementById('hf-btn-admin').onclick = function() {{ clickSt(0); }};
     doc.getElementById('hf-btn-tema').onclick  = function() {{ clickSt(1); }};
-    
-    // 5. Lógica de estado do Vídeo Logo (Tocar só uma vez)
-    var logoVid = doc.querySelector('.logo-video');
-    if (logoVid) {{
-        if (sessionStorage.getItem('hf_video_played')) {{
-            // Se já tocou nessa sessão, pausa e pula pro final
-            logoVid.removeAttribute('autoplay');
-            logoVid.pause();
-            
-            if (logoVid.readyState >= 1) {{
-                logoVid.currentTime = logoVid.duration || 999;
-            }} else {{
-                logoVid.addEventListener('loadedmetadata', function() {{
-                    logoVid.currentTime = logoVid.duration || 999;
-                }});
-            }}
-        }} else {{
-            // Marca como tocado quando terminar
-            logoVid.addEventListener('ended', function() {{
-                sessionStorage.setItem('hf_video_played', 'true');
-            }});
-        }}
-    }}
+
 }})();
 </script>
 """, height=0, width=0)
