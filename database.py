@@ -51,7 +51,7 @@ def get_produtos():
         st.error(f"Erro ao buscar produtos: {e}")
         return []
 
-def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra, unidade_medida="Un"):
+def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra, unidade_medida="Un", producao_propria=False):
     """Adiciona um novo produto ao banco"""
     try:
         data = {
@@ -62,7 +62,8 @@ def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, 
             "preco_venda": float(preco_venda),
             "quantidade_estoque": float(estoque),
             "data_compra": data_compra,
-            "unidade_medida": unidade_medida
+            "unidade_medida": unidade_medida,
+            "producao_propria": producao_propria
         }
         supabase.table("produtos").insert(data).execute()
         get_produtos.clear()
@@ -71,7 +72,7 @@ def adicionar_produto(nome, codigo_barras, categoria, preco_custo, preco_venda, 
         st.error(f"Erro ao adicionar produto: {e}")
         return False
 
-def atualizar_produto(produto_id, nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra, unidade_medida="Un"):
+def atualizar_produto(produto_id, nome, codigo_barras, categoria, preco_custo, preco_venda, estoque, data_compra, unidade_medida="Un", producao_propria=False):
     """Atualiza as informações de um produto existente"""
     try:
         data = {
@@ -82,7 +83,8 @@ def atualizar_produto(produto_id, nome, codigo_barras, categoria, preco_custo, p
             "preco_venda": float(preco_venda),
             "quantidade_estoque": float(estoque),
             "data_compra": data_compra,
-            "unidade_medida": unidade_medida
+            "unidade_medida": unidade_medida,
+            "producao_propria": producao_propria
         }
         supabase.table("produtos").update(data).eq("id", produto_id).execute()
         get_produtos.clear()
@@ -440,3 +442,66 @@ def update_solicitacao_status(req_id, novo_status):
     except Exception as e:
         print('Erro ao atualizar solicitacao:', e)
         return False
+
+# ==========================================
+# EXCLUSOES COM RETORNO DE ESTOQUE
+# ==========================================
+
+def reverter_estoque(produto_id, quantidade_devolvida):
+    try:
+        if not produto_id: return
+        p = supabase.table('produtos').select('quantidade_estoque').eq('id', produto_id).execute()
+        if p.data:
+            nova_qtd = float(p.data[0]['quantidade_estoque']) + float(quantidade_devolvida)
+            supabase.table('produtos').update({'quantidade_estoque': nova_qtd}).eq('id', produto_id).execute()
+            # Limpa cache local se estiver usando
+            if 'get_produtos' in globals() and hasattr(get_produtos, 'clear'):
+                get_produtos.clear()
+    except Exception as e:
+        print('Erro ao reverter estoque:', e)
+
+def excluir_venda(venda_id):
+    try:
+        itens = supabase.table('itens_venda').select('*').eq('venda_id', venda_id).execute()
+        for item in itens.data:
+            reverter_estoque(item['produto_id'], item['quantidade'])
+            
+        supabase.table('itens_venda').delete().eq('venda_id', venda_id).execute()
+        supabase.table('vendas').delete().eq('id', venda_id).execute()
+        return True
+    except Exception as e:
+        print('Erro ao excluir venda:', e)
+        return False
+
+def excluir_compra_anotada(id):
+    try:
+        compra = supabase.table('compras_anotadas').select('*').eq('id', id).execute()
+        if compra.data:
+            reverter_estoque(compra.data[0]['produto_id'], compra.data[0]['quantidade'])
+        supabase.table('compras_anotadas').delete().eq('id', id).execute()
+        return True
+    except Exception as e:
+        print('Erro ao excluir compra anotada:', e)
+        return False
+
+def excluir_retirada(id):
+    try:
+        ret = supabase.table('retiradas_casa').select('*').eq('id', id).execute()
+        if ret.data:
+            reverter_estoque(ret.data[0]['produto_id'], ret.data[0]['quantidade'])
+        supabase.table('retiradas_casa').delete().eq('id', id).execute()
+        return True
+    except Exception as e:
+        print('Erro ao excluir retirada:', e)
+        return False
+
+def get_relatorio_producao_propria(mes, ano):
+    try:
+        from datetime import timezone, timedelta
+        import datetime as dt_lib
+        # Simplificando, buscar itens com seus produtos onde producao_propria=True
+        itens = supabase.table('itens_venda').select('*, produtos!inner(*), vendas!inner(*)').eq('produtos.producao_propria', True).execute()
+        return itens.data
+    except Exception as e:
+        print('Erro ao buscar relatorio producao propria:', e)
+        return []

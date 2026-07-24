@@ -73,8 +73,14 @@ def render_pdv(produtos):
 
     # Definição do callback de adicionar ao carrinho
     def add_to_cart_callback(p):
-        qtd_add = st.session_state.get(f"pdv_qtd_{p['id']}", 1.0)
-        if qtd_add > p['quantidade_estoque'] and p.get('categoria') != 'Horta (Ilimitado)':
+        qtd_input = st.session_state.get(f"pdv_qtd_{p['id']}", 1.0)
+        
+        if p.get('unidade_medida', '').lower() == 'kg':
+            qtd_add = float(qtd_input) / float(p['preco_venda'])
+        else:
+            qtd_add = float(qtd_input)
+            
+        if qtd_add > p['quantidade_estoque'] and p.get('categoria') != 'Horta (Ilimitado)' and not p.get('producao_propria'):
             st.session_state._pdv_msg = ("warning", f"Estoque insuficiente de {p['nome']}!")
             return
             
@@ -92,7 +98,7 @@ def render_pdv(produtos):
                 "subtotal": float(qtd_add) * float(p['preco_venda']),
                 "custo": float(qtd_add) * float(p.get('preco_custo', 0)),
                 "unidade_medida": p.get('unidade_medida', 'Un'),
-                "is_estoque_controlado": p.get('categoria') != 'Horta (Ilimitado)',
+                "is_estoque_controlado": p.get('categoria') != 'Horta (Ilimitado)' and not p.get('producao_propria'),
                 "categoria": p.get('categoria', ''),
             })
         st.session_state._pdv_msg = ("success", f"✅ {p['nome']} adicionado!")
@@ -144,13 +150,21 @@ def render_pdv(produtos):
                                 st.markdown(f'<div style="text-align:center;font-size:13px;font-weight:bold;margin-bottom:5px;line-height:1.2;height:32px;overflow:hidden;">{nome_curto}</div>', unsafe_allow_html=True)
                                 st.markdown(f'<div style="text-align:center;font-size:14px;color:#27ae60;font-weight:bold;margin-bottom:5px;">R$ {p["preco_venda"]:.2f}</div>', unsafe_allow_html=True)
                                 
-                                esgotado = p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)'
+                                esgotado = p['quantidade_estoque'] <= 0 and p.get('categoria') != 'Horta (Ilimitado)' and not p.get('producao_propria')
                                 if esgotado:
                                     st.markdown('<div style="text-align:center;color:#e74c3c;font-size:12px;font-weight:bold;margin-bottom:10px;">Esgotado</div>', unsafe_allow_html=True)
                                     st.button("Esgotado", key=f"pdv_btn_{p['id']}", disabled=True, use_container_width=True)
                                 else:
-                                    st.markdown(f'<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: {p["quantidade_estoque"]}</div>', unsafe_allow_html=True)
-                                    st.number_input("Qtd", min_value=0.01, value=1.0, step=1.0, label_visibility="collapsed", format="%.2f", key=f"pdv_qtd_{p['id']}")
+                                    if p.get('producao_propria'):
+                                        st.markdown('<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: Disponível</div>', unsafe_allow_html=True)
+                                    else:
+                                        st.markdown(f'<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: {p["quantidade_estoque"]}</div>', unsafe_allow_html=True)
+                                    
+                                    if p.get('unidade_medida', '').lower() == 'kg':
+                                        st.markdown('<div style="font-size:11px;text-align:center;margin-bottom:-10px;margin-top:-5px;">Valor (R$)</div>', unsafe_allow_html=True)
+                                        st.number_input("Valor R$", min_value=0.01, value=float(p['preco_venda']), step=0.50, label_visibility="collapsed", format="%.2f", key=f"pdv_qtd_{p['id']}")
+                                    else:
+                                        st.number_input("Qtd", min_value=0.01, value=1.0, step=1.0, label_visibility="collapsed", format="%.2f", key=f"pdv_qtd_{p['id']}")
                                     st.button("➕ Add", key=f"pdv_add_{p['id']}", type="primary", on_click=add_to_cart_callback, args=(p,), use_container_width=True)
         else:
             st.info("Nenhum produto encontrado com essa busca.")
@@ -262,12 +276,13 @@ def render_admin():
                 data_compra = c7.text_input("Data de Compra", placeholder="Ex: 02/06/2026")
                 unidade_medida = c8.selectbox("Vendido por", ["Un", "Kg"])
                 
+                producao_propria = st.checkbox("🌱 Produção Própria (Filtro e exibição de estoque especial)")
                 imagem_upload = st.file_uploader("Foto do Produto (Opcional)", type=["png", "jpg", "jpeg"])
                 
                 submit = st.form_submit_button("Salvar Produto", type="primary")
                 if submit:
                     if nome and venda >= 0:
-                        sucesso = db.adicionar_produto(nome, codigo, categoria, custo, venda, estoque, data_compra, unidade_medida)
+                        sucesso = db.adicionar_produto(nome, codigo, categoria, custo, venda, estoque, data_compra, unidade_medida, producao_propria)
                         if sucesso:
                             st.session_state.produtos_local = db.get_produtos()
                             if imagem_upload:
@@ -358,7 +373,12 @@ def render_admin():
                                 
                                 st.markdown(f'<div style="min-height: 45px; font-weight: bold; font-size: 15px; margin-bottom: 5px; text-align: center;">{p["nome"]}</div>', unsafe_allow_html=True)
                                 st.markdown(f'<div style="font-size: 14px; margin-bottom: 5px; text-align: center;"><b>R$ {p["preco_venda"]:.2f}</b></div>', unsafe_allow_html=True)
-                                st.markdown(f'<div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
+                                
+                                if p.get('producao_propria'):
+                                    estoque_txt = "Disponível" if p["quantidade_estoque"] > 0 else "Não Disponível"
+                                    st.markdown(f'<div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">Estoque: {estoque_txt} (Prod. Própria)</div>', unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f'<div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">Estoque: {p["quantidade_estoque"]} {p.get("unidade_medida", "Un")}</div>', unsafe_allow_html=True)
                                 
                                 with st.popover("✏️ Editar", use_container_width=True):
                                     with st.form(f"form_edit_{p['id']}"):
@@ -376,10 +396,11 @@ def render_admin():
                                         e_venda = colB.number_input("Venda", value=float(p['preco_venda']), step=0.1)
                                         
                                         e_estoque = st.number_input("Estoque", value=float(p['quantidade_estoque']), step=1.0)
+                                        e_prod_propria = st.checkbox("Produção Própria", value=p.get('producao_propria', False), key=f"pp_edit_{p['id']}")
                                         e_img = st.file_uploader("Trocar Foto (Opcional)", type=["png", "jpg", "jpeg"], key=f"img_edit_{p['id']}")
                                         
                                         if st.form_submit_button("💾 Salvar Alterações", type="primary", use_container_width=True):
-                                            if db.atualizar_produto(p['id'], e_nome, e_cod, e_cat, e_custo, e_venda, e_estoque, p.get('data_compra', ''), e_medida):
+                                            if db.atualizar_produto(p['id'], e_nome, e_cod, e_cat, e_custo, e_venda, e_estoque, p.get('data_compra', ''), e_medida, e_prod_propria):
                                                 if e_img:
                                                     img_bytes = e_img.read()
                                                     import threading
@@ -473,7 +494,8 @@ def render_admin():
                     total_devendo = sum(c['quantidade'] * c['preco_unitario'] for c in compras)
                     st.error(f"Dívida Total: R$ {total_devendo:.2f}")
                     
-                    dividas_view = []
+                    st.markdown("---")
+                    st.markdown("**Lista de Itens Anotados:**")
                     for c in compras:
                         try:
                             from datetime import timezone, timedelta
@@ -486,18 +508,18 @@ def render_admin():
                             data_fmt = c['data_hora']
                             
                         nome_prod = c['produtos']['nome'] if c.get('produtos') else 'Produto Excluído'
-                        un_medida = c['produtos'].get('data_compra', '') if c.get('produtos') else ''
+                        un_medida = c['produtos'].get('unidade_medida', '') if c.get('produtos') else ''
                         
-                        dividas_view.append({
-                            "ID": c['id'],
-                            "Data": data_fmt,
-                            "Produto": nome_prod,
-                            "Qtd": f"{c['quantidade']} {un_medida}",
-                            "Preço Un.": f"R$ {c['preco_unitario']:.2f}",
-                            "Subtotal": f"R$ {c['quantidade'] * c['preco_unitario']:.2f}"
-                        })
-                        
-                    st.dataframe(dividas_view, use_container_width=True, hide_index=True)
+                        col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+                        col1.write(f"📅 {data_fmt} - **{nome_prod}**")
+                        col2.write(f"{c['quantidade']} {un_medida} x R$ {c['preco_unitario']:.2f}")
+                        col3.write(f"💰 **R$ {c['quantidade'] * c['preco_unitario']:.2f}**")
+                        if col4.button("🗑️", key=f"del_fiado_{c['id']}"):
+                            if db.excluir_compra_anotada(c['id']):
+                                st.success("Item excluído e estoque devolvido!")
+                                import time; time.sleep(0.5); st.rerun()
+                                
+                    st.markdown("---")
                     
                     if st.button("Pagar Conta (Quitar tudo)", type="primary"):
                         ids = [c['id'] for c in compras]
@@ -520,26 +542,32 @@ def render_admin():
                     p_f = next(p for p in prods_f if p['nome'] == p_f_nome)
                     
                     c1, c2 = st.columns(2)
-                    qtd_f = c1.number_input("Quantidade", min_value=0.01, value=1.00, key="qtd_fiado")
+                    is_kg = p_f.get('unidade_medida', '').lower() == 'kg'
+                    lbl_qtd = "Valor R$" if is_kg else "Quantidade"
+                    
+                    qtd_f = c1.number_input(lbl_qtd, min_value=0.01, value=float(p_f['preco_venda']) if is_kg else 1.00, key="qtd_fiado")
                     preco_f = c2.number_input("Preço Unitário", value=float(p_f['preco_venda']), key="preco_fiado")
                     
                     if st.button("Anotar na Conta"):
+                        qtd_final = (qtd_f / preco_f) if (is_kg and preco_f > 0) else qtd_f
+                        
                         # Pré-calcula novo_estoque do cache local
                         novo_est_val = None
+                        is_est_ctrl = p_f['categoria'] != 'Horta (Ilimitado)' and not p_f.get('producao_propria')
                         for p_loc in st.session_state.get('produtos_local', []):
-                            if p_loc['id'] == p_f['id'] and p_f['categoria'] != 'Horta (Ilimitado)':
-                                novo_est_val = max(0.0, p_loc['quantidade_estoque'] - qtd_f)
+                            if p_loc['id'] == p_f['id'] and is_est_ctrl:
+                                novo_est_val = max(0.0, p_loc['quantidade_estoque'] - qtd_final)
                         item = {
                             "produto_id": p_f['id'],
-                            "quantidade": qtd_f,
+                            "quantidade": qtd_final,
                             "preco_unitario": preco_f,
-                            "is_estoque_controlado": p_f['categoria'] != 'Horta (Ilimitado)',
+                            "is_estoque_controlado": is_est_ctrl,
                             "novo_estoque": novo_est_val
                         }
                         if db.anotar_compra(cli_selecionado['id'], [item]):
                             st.success("Compra anotada com sucesso!")
                             for p in st.session_state.produtos_local:
-                                if p['id'] == item['produto_id'] and p_f['categoria'] != 'Horta (Ilimitado)':
+                                if p['id'] == item['produto_id'] and is_est_ctrl:
                                     p['quantidade_estoque'] = max(0.0, p['quantidade_estoque'] - item['quantidade'])
                             st.rerun()
     
@@ -571,20 +599,21 @@ def render_admin():
                 if st.button("Registrar Retirada", type="primary"):
                     # Pré-calcula novo_estoque do cache local
                     novo_est_r = None
+                    is_est_ctrl = p_r['categoria'] != 'Horta (Ilimitado)' and not p_r.get('producao_propria')
                     for p_loc in st.session_state.get('produtos_local', []):
-                        if p_loc['id'] == p_r['id'] and p_r['categoria'] != 'Horta (Ilimitado)':
+                        if p_loc['id'] == p_r['id'] and is_est_ctrl:
                             novo_est_r = max(0.0, p_loc['quantidade_estoque'] - qtd_r)
                     item_r = {
                         "produto_id": p_r['id'],
                         "quantidade": qtd_r,
                         "preco_custo": p_r['preco_custo'],
-                        "is_estoque_controlado": p_r['categoria'] != 'Horta (Ilimitado)',
+                        "is_estoque_controlado": is_est_ctrl,
                         "novo_estoque": novo_est_r
                     }
                     if db.registrar_retirada_casa([item_r]):
                         st.success("Retirada registrada!")
                         for p in st.session_state.produtos_local:
-                            if p['id'] == item_r['produto_id'] and p_r['categoria'] != 'Horta (Ilimitado)':
+                            if p['id'] == item_r['produto_id'] and is_est_ctrl:
                                 p['quantidade_estoque'] = max(0.0, p['quantidade_estoque'] - item_r['quantidade'])
                         st.rerun()
                         
@@ -609,19 +638,20 @@ def render_admin():
                         data_fmt = r['data_hora']
                         
                     nome_prod = r['produtos']['nome'] if r.get('produtos') else 'Produto Excluído'
-                    un_medida = r['produtos'].get('data_compra', '') if r.get('produtos') else ''
+                    un_medida = r['produtos'].get('unidade_medida', '') if r.get('produtos') else ''
                     sub_custo = r['quantidade'] * r['custo_unitario']
                     custo_total_ret += sub_custo
                     
-                    ret_view.append({
-                        "Data": data_fmt,
-                        "Produto": nome_prod,
-                        "Qtd": f"{r['quantidade']} {un_medida}",
-                        "Custo (R$)": f"R$ {sub_custo:.2f}"
-                    })
-                    
+                    c1, c2, c3, c4 = st.columns([3, 2, 2, 1])
+                    c1.write(f"📅 {data_fmt} - **{nome_prod}**")
+                    c2.write(f"{r['quantidade']} {un_medida}")
+                    c3.write(f"📉 **Custo: R$ {sub_custo:.2f}**")
+                    if c4.button("🗑️", key=f"del_ret_{r['id']}"):
+                        if db.excluir_retirada(r['id']):
+                            st.success("Retirada excluída e estoque devolvido!")
+                            import time; time.sleep(0.5); st.rerun()
+                            
                 st.error(f"Custo Total Retirado no Mês: R$ {custo_total_ret:.2f}")
-                st.dataframe(ret_view, use_container_width=True, hide_index=True)
             else:
                 st.success("Nenhuma retirada registrada neste mês.")
     
@@ -633,47 +663,90 @@ def render_admin():
         
         vendas = db.get_vendas()
         
-        if vendas:
-            from datetime import timezone, timedelta
-            
-            tz_br = timezone(timedelta(hours=-3))
-            hoje = datetime.datetime.now(tz_br).date()
-            
-            vendas_hoje = []
-            hist_view = []
-            
-            total_hoje = 0.0
-            lucro_hoje = 0.0
-            
-            for v in vendas:
-                try:
-                    dt_str = v['data_venda'].split('.')[0].replace('Z', '+00:00')
-                    dt_obj = datetime.datetime.fromisoformat(dt_str).astimezone(tz_br)
-                except Exception:
-                    dt_obj = datetime.datetime.now(tz_br)
-                    
-                if dt_obj.date() == hoje:
-                    vendas_hoje.append(v)
-                    total_hoje += v['valor_total']
-                    lucro_hoje += v['lucro_total']
-                    
-                hist_view.append({
-                    'Data/Hora': dt_obj.strftime('%d/%m/%Y %H:%M:%S'),
-                    'Valor Total (R$)': v['valor_total'],
-                    'Forma Pagamento': v['forma_pagamento']
-                })
+        rel_geral, rel_pp = st.tabs(["Geral", "Produção Própria"])
+        
+        with rel_geral:
+            if vendas:
+                from datetime import timezone, timedelta
                 
-            qtd_vendas_hoje = len(vendas_hoje)
+                tz_br = timezone(timedelta(hours=-3))
+                hoje = datetime.datetime.now(tz_br).date()
+                
+                vendas_hoje = []
+                hist_view = []
+                
+                total_hoje = 0.0
+                lucro_hoje = 0.0
+                
+                for v in vendas:
+                    try:
+                        dt_str = v['data_venda'].split('.')[0].replace('Z', '+00:00')
+                        dt_obj = datetime.datetime.fromisoformat(dt_str).astimezone(tz_br)
+                    except Exception:
+                        dt_obj = datetime.datetime.now(tz_br)
+                        
+                    if dt_obj.date() == hoje:
+                        vendas_hoje.append(v)
+                        total_hoje += v['valor_total']
+                        lucro_hoje += v['lucro_total']
+                        
+                qtd_vendas_hoje = len(vendas_hoje)
+                
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Vendas Hoje (R$)", f"R$ {total_hoje:.2f}")
+                c2.metric("Lucro Estimado Hoje", f"R$ {lucro_hoje:.2f}")
+                c3.metric("Qtd de Vendas Hoje", f"{qtd_vendas_hoje}")
+                
+                st.markdown("### Histórico Recente (Últimas 100 vendas)")
+                for v in vendas:
+                    try:
+                        dt_str = v['data_venda'].split('.')[0].replace('Z', '+00:00')
+                        dt_obj = datetime.datetime.fromisoformat(dt_str).astimezone(tz_br)
+                    except Exception:
+                        dt_obj = datetime.datetime.now(tz_br)
+                    
+                    c1, c2, c3, c4 = st.columns([3, 2, 2, 1])
+                    c1.write(f"📅 {dt_obj.strftime('%d/%m %H:%M')}")
+                    c2.write(f"Pag: {v['forma_pagamento']}")
+                    c3.write(f"💰 **R$ {v['valor_total']:.2f}**")
+                    if c4.button("🗑️", key=f"del_v_{v['id']}"):
+                        if db.excluir_venda(v['id']):
+                            st.success("Venda excluída e estoque revertido!")
+                            import time; time.sleep(0.5); st.rerun()
+            else:
+                st.info("Ainda não há histórico de vendas registrado no banco.")
+                
+        with rel_pp:
+            st.subheader("Relatório de Produção Própria (Mês Atual)")
+            from datetime import timezone, timedelta
+            tz_br = timezone(timedelta(hours=-3))
+            hoje = datetime.datetime.now(tz_br)
             
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Vendas Hoje (R$)", f"R$ {total_hoje:.2f}")
-            c2.metric("Lucro Estimado Hoje", f"R$ {lucro_hoje:.2f}")
-            c3.metric("Qtd de Vendas Hoje", f"{qtd_vendas_hoje}")
-            
-            st.markdown("### Histórico Recente (Últimas 100 vendas)")
-            st.dataframe(hist_view, use_container_width=True, hide_index=True)
-        else:
-            st.info("Ainda não há histórico de vendas registrado no banco.")
+            itens_pp = db.get_relatorio_producao_propria(hoje.month, hoje.year)
+            if itens_pp:
+                vendas_totais_pp = 0.0
+                lucro_total_pp = 0.0
+                qtd_total_pp = 0.0
+                
+                for item in itens_pp:
+                    try:
+                        dt_str = item['vendas']['data_venda'].split('.')[0].replace('Z', '+00:00')
+                        dt_v = datetime.datetime.fromisoformat(dt_str).astimezone(tz_br)
+                    except:
+                        dt_v = hoje
+                        
+                    if dt_v.year == hoje.year and dt_v.month == hoje.month:
+                        qtd_total_pp += float(item['quantidade'])
+                        vendas_totais_pp += float(item['subtotal'])
+                        custo_item = float(item['quantidade']) * float(item['produtos']['preco_custo'])
+                        lucro_total_pp += (float(item['subtotal']) - custo_item)
+                        
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Valor Total Vendido (R$)", f"R$ {vendas_totais_pp:.2f}")
+                c2.metric("Lucro Líquido (R$)", f"R$ {lucro_total_pp:.2f}")
+                c3.metric("Quantidade de Itens (Qtd/Kg)", f"{qtd_total_pp:.2f}")
+            else:
+                st.info("Nenhuma venda de produção própria registrada neste mês.")
 
 
     # =========================================================
