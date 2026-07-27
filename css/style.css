@@ -1,0 +1,124 @@
+/* =================================================================
+   STYLE.CSS — Estilos Base Modernos
+   ================================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-card: #1a1a24;
+  --text-primary: #f8f9fa;
+  --text-secondary: #adb5bd;
+  --accent: #27ae60;
+  --accent-hover: #2ecc71;
+  --border: rgba(255,255,255,0.1);
+  --shadow: 0 4px 12px rgba(0,0,0,0.5);
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Inputs globais */
+input, select, button {
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+input:focus, select:focus {
+  border-color: var(--accent);
+}
+
+button {
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+button:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+}
+
+.admin-link {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: var(--bg-card);
+  padding: 10px;
+  border-radius: 50%;
+  font-size: 20px;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+}
+
+.admin-link:hover {
+  opacity: 1;
+}
+
+/* ===== TEMA CLARO ===== */
+body.light-theme {
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #1a1a24;
+  --text-secondary: #4a4a5a;
+  --border: #cccccc;
+}
+
+/* ===== ALTO CONTRASTE (CLARO E ESCURO) ===== */
+body.high-contrast {
+  --bg-primary: #000000 !important;
+  --bg-secondary: #000000 !important;
+  --bg-card: #000000 !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: #ffff00 !important;
+  --accent: #ffff00 !important;
+  --accent-hover: #ffcc00 !important;
+  --border: #ffffff !important;
+}
+
+body.light-theme.high-contrast {
+  --bg-primary: #ffffff !important;
+  --bg-secondary: #ffffff !important;
+  --bg-card: #ffffff !important;
+  --text-primary: #000000 !important;
+  --text-secondary: #0000ee !important;
+  --accent: #0000ee !important;
+  --accent-hover: #0000aa !important;
+  --border: #000000 !important;
+}
+
+body.high-contrast * {
+  text-shadow: none !important;
+}
+
+body.high-contrast button {
+  background-color: var(--accent) !important;
+  color: var(--bg-primary) !important;
+  border: 2px solid var(--text-primary) !important;
+  font-weight: 900 !important;
+}

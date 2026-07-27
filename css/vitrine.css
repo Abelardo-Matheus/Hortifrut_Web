@@ -1,0 +1,218 @@
+/* =================================================================
+   VITRINE.CSS — Estilos da Vitrine Pública
+   ================================================================= */
+
+/* ===== CABEÇALHO: VÍDEO LOGO ===== */
+.video-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: transparent;
+}
+
+.logo-video {
+    width: 100%;
+    height: auto;
+    max-height: 360px;
+    object-fit: contain;
+    display: block;
+}
+
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ===== BUSCA ===== */
+.search-container {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.search-container input {
+    width: 100%;
+    max-width: 800px;
+    padding: 20px 25px;
+    font-size: 20px;
+    border-radius: 40px;
+    border: 2px solid var(--accent);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    box-shadow: 0 0 15px rgba(39, 174, 96, 0.4);
+    transition: all 0.3s;
+}
+
+.search-container input:focus {
+    box-shadow: 0 0 25px rgba(39, 174, 96, 0.8);
+    border-color: var(--accent-hover);
+    outline: none;
+}
+
+/* ===== GRADE DE PRODUTOS ===== */
+.vitrine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 15px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .vitrine-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+}
+
+/* ===== CARD DE PRODUTO ===== */
+.vitrine-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.vitrine-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.vitrine-img-container {
+    display: flex;
+    justify-content: center;
+    height: 120px;
+    align-items: center;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.blend-img {
+    max-width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+    border-radius: 5px;
+}
+
+.sem-imagem {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.vitrine-nome {
+    height: 48px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.vitrine-preco {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    font-size: 20px;
+    margin-bottom: 5px;
+    color: #27ae60;
+    font-weight: 700;
+}
+
+.vitrine-preco span {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 4px;
+    font-weight: normal;
+}
+
+.vitrine-estoque {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.disp { color: #3498db; }
+.esgot { color: #e74c3c; }
+
+/* ===== BOTÕES FLUTUANTES ===== */
+.social-floats {
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.float-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(14, 17, 23, 0.80);
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+.float-btn:hover {
+    background: rgba(60, 70, 90, 0.90);
+    transform: scale(1.07);
+}
+
+.float-btn img {
+    width: 32px;
+    height: 32px;
+}
+
+/* Responsividade Mobile */
+@media (max-width: 768px) {
+    .vitrine-card {
+        padding: 8px;
+    }
+    .vitrine-img-container {
+        height: 80px;
+        margin-bottom: 8px;
+    }
+    .blend-img {
+        max-height: 80px;
+    }
+    .vitrine-nome {
+        font-size: 12px;
+        height: 34px;
+        line-height: 1.2;
+    }
+    .vitrine-preco {
+        font-size: 14px;
+    }
+    .vitrine-estoque {
+        font-size: 10px;
+    }
+    .social-floats {
+        bottom: 15px;
+        left: 15px;
+        gap: 8px;
+    }
+    .float-btn {
+        width: 48px;
+        height: 48px;
+    }
+    .float-btn img {
+        width: 28px;
+        height: 28px;
+    }
+}

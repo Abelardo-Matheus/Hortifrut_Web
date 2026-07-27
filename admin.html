@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin - Hortifruti J&M</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  
+  <script src="js/auth.js"></script>
+  <script>checkAuth(); // Protege a página</script>
+
+  <div class="streamlit-layout">
+    <!-- Streamlit style Tabs -->
+    <div class="st-tabs">
+      <button class="st-tab-btn active" data-tab="tab-produtos">📦 Produtos</button>
+      <button class="st-tab-btn" data-tab="tab-caixa">🛒 Caixa</button>
+      <button class="st-tab-btn" data-tab="tab-fiado">📝 Fiado (Anotado)</button>
+      <button class="st-tab-btn" data-tab="tab-retiradas">🏠 Retiradas Casa</button>
+      <button class="st-tab-btn" data-tab="tab-balanco">📊 Resumo de Vendas</button>
+      <button class="st-tab-btn" data-tab="tab-solicitacoes">🔔 Solicitações</button>
+      <button class="st-tab-btn logout" onclick="logout()" style="margin-left:auto; color:#e74c3c;">Sair</button>
+    </div>
+
+    <!-- Área Principal de Conteúdo -->
+    <main class="st-content-area">
+      
+      <!-- ABA: PRODUTOS -->
+      <section id="tab-produtos" class="tab-content active">
+        <div style="display:flex; justify-content:center; align-items:center; margin-bottom: 20px;">
+          <button id="btnNovoProduto" class="st-button" style="padding: 15px 30px; font-size: 16px;">➕ Adicionar Novo Produto</button>
+        </div>
+        
+        <div class="search-bar" style="margin-bottom: 20px; display:flex; flex-direction:column; align-items:center;">
+          <label style="display:block; margin-bottom:10px; font-size:16px; font-weight:600;">🔍 Buscar Produto no Estoque</label>
+          <input type="text" id="buscaProdutoAdmin" placeholder="Digite o nome ou código do produto..." class="st-input" style="max-width: 800px;">
+        </div>
+
+        <!-- Onde ficava a tabela, agora é um grid igual a vitrine -->
+        <div id="gridAdminProdutos" class="vitrine-grid">
+          <p style="text-align:center; width:100%;">Carregando produtos...</p>
+        </div>
+      </section>
+
+      <!-- ABA: SOLICITAÇÕES -->
+      <section id="tab-solicitacoes" class="tab-content">
+        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; margin-top: 10px;">🔔 Solicitações de Clientes</h2>
+        
+        <div id="listaSolicitacoes" style="display:flex; flex-direction:column; gap:15px;">
+          <!-- Preenchido via JS -->
+          <div style="background: rgba(41, 128, 185, 0.1); border: 1px solid #3498db; color: #3498db; padding: 15px; border-radius: 5px;">
+            Carregando solicitações...
+          </div>
+        </div>
+      </section>
+
+      <!-- Outras abas (Caixa, Fiado, etc.) serão preenchidas nos próximos passos -->
+      <section id="tab-caixa" class="tab-content">
+        <div style="display: flex; gap: 30px; margin-top: 20px;">
+          <!-- 3/5 Coluna: Produtos -->
+          <div style="flex: 3.5;">
+            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 20px; text-align: center;">🛒 Produtos</h2>
+            <div style="margin-bottom: 20px; display:flex; justify-content:center;">
+              <input type="text" id="buscaCaixa" class="st-input" style="max-width: 800px;" placeholder="🔍 Buscar - Pesquisa automática por nome ou código...">
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 20px;">
+            <div id="gridCaixaProdutos" class="vitrine-grid">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+
+          <!-- 2/5 Coluna: Carrinho -->
+          <div style="flex: 1.3;">
+            <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">🧾 Carrinho</h2>
+            <div id="msgCaixa" style="display:none; padding:10px; border-radius:5px; margin-bottom:15px; font-size:14px;"></div>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 20px;">
+            
+            <div id="listaCarrinho" style="min-height: 200px;">
+              <div style="background: rgba(41, 128, 185, 0.1); border: 1px solid rgba(41, 128, 185, 0.3); padding: 15px; border-radius: 5px; color: #3498db; font-size: 14px;">
+                Carrinho vazio.<br>Busque e selecione um produto à esquerda.
+              </div>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border); margin-top: 20px; margin-bottom: 20px;">
+            <h3 style="font-size: 18px; margin-bottom: 20px;">💰 Total: <span id="totalCaixa">R$ 0.00</span></h3>
+            
+            <label style="font-size:14px; font-weight:bold; margin-bottom:8px; display:block;">💳 Forma de Pagamento</label>
+            <select id="pagamentoCaixa" class="st-input" style="margin-bottom: 20px;">
+              <option>Dinheiro</option>
+              <option>PIX</option>
+              <option>Cartão Crédito</option>
+              <option>Cartão Débito</option>
+              <option>Fiado (Anotar)</option>
+            </select>
+
+            <div id="divTrocoCaixa" style="margin-bottom: 20px;">
+              <label style="font-size:14px; margin-bottom:8px; display:block;">Valor Recebido (Troco)</label>
+              <input type="number" id="valorPagoCaixa" class="st-input" min="0" step="0.50" value="0.00">
+              <div id="txtTroco" style="display:none; background: rgba(39, 174, 96, 0.1); border: 1px solid #27ae60; color: #27ae60; padding: 10px; border-radius: 5px; margin-top: 10px; font-weight:bold;"></div>
+            </div>
+
+            <div id="divFiadoCliente" style="display:none; margin-bottom: 20px;">
+              <label style="font-size:14px; margin-bottom:8px; display:block;">Selecione o Cliente</label>
+              <select id="clienteFiadoCaixa" class="st-input"></select>
+            </div>
+
+            <button id="btnFinalizarVenda" class="st-button" style="width:100%; background-color:#ff4b4b; border-color:#ff4b4b; color:white; font-size:16px; padding:12px;">✅ FINALIZAR VENDA</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA: FIADO -->
+      <section id="tab-fiado" class="tab-content">
+        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; margin-top: 10px;">📝 Controle de Fiados e Anotados</h2>
+        <div style="display: flex; gap: 30px;">
+          <!-- Coluna 1 (Clientes) -->
+          <div style="flex: 1;">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">Clientes</h3>
+            <div class="st-card" style="margin-bottom: 20px;">
+              <button id="btnToggleNovoCliente" class="st-button" style="width:100%; text-align:left;">➕ Novo Cliente</button>
+              <div id="divNovoCliente" style="display:none; margin-top: 15px;">
+                <input type="text" id="novoClienteNome" class="st-input" placeholder="Nome do Cliente *" style="margin-bottom:10px;">
+                <input type="text" id="novoClienteTel" class="st-input" placeholder="Telefone (Opcional)" style="margin-bottom:10px;">
+                <button id="btnSalvarNovoCliente" class="st-button" style="background-color:#ff4b4b; color:white; border:none;">Salvar</button>
+              </div>
+            </div>
+            
+            <label style="font-size:14px; font-weight:bold; margin-bottom:8px; display:block;">Selecione um Cliente</label>
+            <select id="selectClienteFiado" class="st-input"></select>
+          </div>
+
+          <!-- Coluna 2 (Detalhes da Conta) -->
+          <div style="flex: 2;">
+            <div id="contaClienteDetalhe" style="display:none;">
+              <h3 id="nomeContaCliente" style="font-size: 18px;">Conta de: ...</h3>
+              <div id="telContaCliente" style="font-size:14px; color:var(--text-secondary); margin-bottom:15px;"></div>
+              
+              <div id="dividaTotalFiado" style="background: rgba(231,76,60,0.1); border: 1px solid #e74c3c; color:#e74c3c; padding: 15px; border-radius: 5px; font-size:18px; font-weight:bold; margin-bottom:20px;">
+                Dívida Total: R$ 0,00
+              </div>
+              
+              <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 20px;">
+              <h4 style="margin-bottom: 15px;">Lista de Itens Anotados:</h4>
+              <div id="listaItensFiado"></div>
+              
+              <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 20px; margin-top:20px;">
+              
+              <div style="display:flex; gap:20px;">
+                <div style="flex:1;">
+                  <h4 style="margin-bottom:10px;">Quitar Tudo</h4>
+                  <button id="btnPagarContaInteira" class="st-button" style="width:100%; background-color:#ff4b4b; color:white; border:none;">Pagar Conta Inteira</button>
+                </div>
+                <div style="flex:1;">
+                  <h4 style="margin-bottom:10px;">Pagamento Parcial</h4>
+                  <input type="number" id="valorParcialFiado" class="st-input" min="0.01" step="1.0" style="margin-bottom:10px;">
+                  <button id="btnRegistrarPagamentoParcial" class="st-button" style="width:100%;">Registrar Valor</button>
+                </div>
+              </div>
+
+              <hr style="border: 0; border-top: 1px solid var(--border); margin-bottom: 20px; margin-top:20px;">
+              <h4 style="margin-bottom: 15px;">Anotar Nova Compra</h4>
+              
+              <input type="text" id="buscaProdutoFiado" class="st-input" placeholder="Buscar Produto:" style="margin-bottom:10px;">
+              <select id="selectProdutoFiado" class="st-input" style="margin-bottom:15px;"></select>
+              
+              <div style="display:flex; gap:15px; margin-bottom:15px;">
+                <div style="flex:1;">
+                  <label id="lblQtdFiado" style="font-size:14px; margin-bottom:5px; display:block;">Quantidade</label>
+                  <input type="number" id="qtdNovaCompraFiado" class="st-input" min="0" step="0.01" value="1">
+                </div>
+                <div style="flex:1;">
+                  <label style="font-size:14px; margin-bottom:5px; display:block;">Preço Unitário</label>
+                  <input type="number" id="precoNovaCompraFiado" class="st-input" min="0" step="0.01">
+                </div>
+              </div>
+              <button id="btnAnotarNovaCompra" class="st-button">Anotar na Conta</button>
+            </div>
+            
+            <div id="contaClienteVazia" style="display:block;">
+              <div style="background: rgba(39, 174, 96, 0.1); border: 1px solid #27ae60; color:#27ae60; padding: 15px; border-radius: 5px;">
+                Nenhum cliente selecionado.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA: RELATÓRIOS (BALANÇO) -->
+      <section id="tab-balanco" class="tab-content">
+        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; margin-top: 10px;">📊 Resumo de Vendas</h2>
+
+        <!-- Sub-abas -->
+        <div style="display:flex; gap:15px; margin-bottom:20px; border-bottom: 1px solid var(--border); padding-bottom:10px;">
+          <button id="btnRelGeral" class="st-tab-btn active">Geral</button>
+          <button id="btnRelPP" class="st-tab-btn">Produção Própria</button>
+        </div>
+
+        <div id="relGeral">
+          <div style="display:flex; gap:20px; margin-bottom:30px;">
+            <div class="st-card" style="flex:1; text-align:center;">
+              <div style="font-size:14px; color:var(--text-secondary);">Vendas Hoje (R$)</div>
+              <div id="metricTotalHoje" style="font-size:32px; font-weight:bold; color:var(--text-primary);">R$ 0,00</div>
+            </div>
+            <div class="st-card" style="flex:1; text-align:center;">
+              <div style="font-size:14px; color:var(--text-secondary);">Lucro Estimado Hoje</div>
+              <div id="metricLucroHoje" style="font-size:32px; font-weight:bold; color:var(--text-primary);">R$ 0,00</div>
+            </div>
+            <div class="st-card" style="flex:1; text-align:center;">
+              <div style="font-size:14px; color:var(--text-secondary);">Qtd de Vendas Hoje</div>
+              <div id="metricQtdHoje" style="font-size:32px; font-weight:bold; color:var(--text-primary);">0</div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 18px; margin-bottom: 15px;">Histórico Recente (Últimas 100 vendas)</h3>
+          <div id="listaVendasGeral" style="min-height: 100px;">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+
+        <div id="relPP" style="display:none;">
+          <h3 style="font-size: 18px; margin-bottom: 15px;">Relatório de Produção Própria (Mês Atual)</h3>
+          
+          <div style="display:flex; gap:20px; margin-bottom:30px;">
+            <div class="st-card" style="flex:1; text-align:center;">
+              <div style="font-size:14px; color:var(--text-secondary);">Valor Total Vendido (R$)</div>
+              <div id="metricPptotal" style="font-size:32px; font-weight:bold; color:var(--text-primary);">R$ 0,00</div>
+            </div>
+            <div class="st-card" style="flex:1; text-align:center;">
+              <div style="font-size:14px; color:var(--text-secondary);">Lucro Líquido (R$)</div>
+              <div id="metricPplucro" style="font-size:32px; font-weight:bold; color:var(--text-primary);">R$ 0,00</div>
+            </div>
+            <div class="st-card" style="flex:1; text-align:center;">
+              <div style="font-size:14px; color:var(--text-secondary);">Quantidade de Itens (Qtd/Kg)</div>
+              <div id="metricPpQtd" style="font-size:32px; font-weight:bold; color:var(--text-primary);">0.00</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA: RETIRADAS PARA CASA -->
+      <section id="tab-retiradas" class="tab-content">
+        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 20px; margin-top: 10px;">🏠 Retiradas para Consumo Próprio</h2>
+        
+        <div style="display: flex; gap: 30px;">
+          <!-- Coluna 1 (Nova Retirada) -->
+          <div style="flex: 1;">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">Nova Retirada</h3>
+            <div style="background: rgba(41, 128, 185, 0.1); border: 1px solid #3498db; color: #3498db; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size:14px;">
+              ℹ️ Produtos retirados para casa são descontados do estoque (sem gerar lucro no caixa).
+            </div>
+
+            <label style="font-size:14px; font-weight:bold; margin-bottom:8px; display:block;">Buscar Produto:</label>
+            <input type="text" id="buscaProdutoRetirada" class="st-input" placeholder="Pesquisar..." style="margin-bottom:10px;">
+            
+            <label style="font-size:14px; font-weight:bold; margin-bottom:8px; display:block;">Produto Selecionado:</label>
+            <select id="selectProdutoRetirada" class="st-input" style="margin-bottom:15px;"></select>
+
+            <label style="font-size:14px; font-weight:bold; margin-bottom:8px; display:block;">Quantidade Retirada</label>
+            <input type="number" id="qtdRetirada" class="st-input" min="0.01" step="0.01" value="1" style="margin-bottom:15px;">
+            
+            <div style="margin-bottom:20px; font-size:15px;">
+              **Custo Estimado da Retirada:** <span id="custoEstimadoRetirada" style="font-weight:bold;">R$ 0,00</span>
+            </div>
+
+            <button id="btnRegistrarRetirada" class="st-button" style="width:100%; background-color:#ff4b4b; color:white; border:none; padding:12px;">Registrar Retirada</button>
+          </div>
+
+          <!-- Coluna 2 (Histórico do Mês) -->
+          <div style="flex: 1;">
+            <h3 id="tituloMesRetirada" style="font-size: 18px; margin-bottom: 15px;">Retiradas do Mês</h3>
+            
+            <div id="listaRetiradasMes" style="min-height: 200px; margin-bottom:20px;">
+              <!-- Preenchido via JS -->
+            </div>
+
+            <div id="custoTotalRetiradas" style="background: rgba(231,76,60,0.1); border: 1px solid #e74c3c; color:#e74c3c; padding: 15px; border-radius: 5px; font-size:16px; font-weight:bold;">
+              Custo Total Retirado no Mês: R$ 0,00
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: PRODUTO -->
+  <div id="modalProduto" class="modal-overlay">
+    <div class="modal-content">
+      <h2 id="modalProdutoTitle">Novo Produto</h2>
+      <form id="formProduto">
+        <input type="hidden" id="prodId">
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nome</label>
+            <input type="text" id="prodNome" required>
+          </div>
+          <div class="form-group">
+            <label>Código de Barras</label>
+            <input type="text" id="prodCodigo">
+          </div>
+          
+          <div class="form-group">
+            <label>Categoria</label>
+            <select id="prodCat">
+              <option>Frutas</option>
+              <option>Legumes</option>
+              <option>Verduras</option>
+              <option>Horta (Ilimitado)</option>
+              <option>Mercearia</option>
+              <option>Outros</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Medida</label>
+            <select id="prodMedida">
+              <option>Un</option>
+              <option>Kg</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Custo (R$)</label>
+            <input type="number" step="0.01" id="prodCusto" required>
+          </div>
+          <div class="form-group">
+            <label>Venda (R$)</label>
+            <input type="number" step="0.01" id="prodVenda" required>
+          </div>
+
+          <div class="form-group">
+            <label>Estoque</label>
+            <input type="number" step="0.01" id="prodEstoque" required>
+          </div>
+          <div class="form-group checkbox-group">
+            <label><input type="checkbox" id="prodPropria"> Produção Própria</label>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Foto (Opcional)</label>
+            <input type="file" id="prodFoto" accept="image/*">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="fecharModalProduto()">Cancelar</button>
+          <button type="submit" class="btn-save">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/supabase_client.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/admin_produtos.js"></script>
+  <script src="js/admin_caixa.js"></script>
+  <script src="js/admin_retiradas.js"></script>
+  <script src="js/admin_relatorios.js"></script>
+  <script src="js/admin_solicitacoes.js"></script>
+  <script src="js/accessibility.js"></script>
+</body>
+</html>

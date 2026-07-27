@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acesso Restrito - Hortifruti J&M</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .login-card {
+      background: var(--bg-card);
+      padding: 40px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .login-card h2 {
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .form-group input {
+      width: 100%;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    #errorMsg {
+      color: #e74c3c;
+      margin-top: 15px;
+      font-size: 14px;
+      display: none;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <h2>🔐 Acesso Restrito</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Usuário</label>
+        <input type="text" id="username" required>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit" class="login-btn">Entrar</button>
+      <div id="errorMsg">Usuário ou senha incorretos.</div>
+    </form>
+    <a href="index.html" class="back-link">Voltar para a Vitrine</a>
+  </div>
+
+  <script src="js/supabase_client.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

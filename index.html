@@ -1,63 +1,52 @@
-<!--
-  ========================================================
-  ARQUIVO PRINCIPAL DE EDIÇÃO DA VITRINE (PÚBLICO)
-  ========================================================
-  Este arquivo controla o layout e a aparência do site dos clientes.
-  O app.py (Streamlit) vai ler este arquivo e exibi-lo online.
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hortifruti J&M - Vitrine Virtual</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/vitrine.css">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
 
-  COMO EDITAR:
-  - Altere o HTML aqui livremente.
-  - Os ESTILOS (CSS) ficam em: static/vitrine.css
-  - Os temas (claro/escuro) ficam em: static/dark_theme.css e light_theme.css
-  ========================================================
--->
-
-<!-- ===== CABEÇALHO — Vídeo logo ===== -->
-<div class="video-container">
-  <video class="logo-video"
-    src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova_transparent.webm"
-    autoplay muted playsinline>
-  </video>
-</div>
-
-<!-- ===== CORPO ("BODY") — Busca, botões e grade de produtos ===== -->
-<!--
-  A linha abaixo é onde o app.py injeta a busca e os botões interativos.
-  NÃO APAGUE ESTA LINHA:
--->
-<!-- STREAMLIT_WIDGETS -->
-
-<main>
-  <div class="vitrine-grid">
-    <!-- PLACEHOLDER_CARDS -->
+  <!-- ===== CABEÇALHO — Vídeo logo ===== -->
+  <div class="video-container">
+    <video class="logo-video"
+      src="https://bslfvnhtirrykxedgpkw.supabase.co/storage/v1/object/public/produtos/logo_nova_transparent.webm"
+      autoplay muted playsinline loop>
+    </video>
   </div>
-</main>
 
-<!-- ===== BOTÕES FLUTUANTES (REDES E LOCAL) ===== -->
-<div class="social-floats">
-  <a href="https://maps.app.goo.gl/vjrxKczdCQGKZPa29" class="float-btn" target="_blank" title="Ver no Mapa">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Google_Maps_icon_%282020%29.svg" alt="Google Maps">
-  </a>
-  <a href="https://www.instagram.com/chacaraabelardinho/" class="float-btn" target="_blank" title="Nosso Instagram">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram">
-  </a>
-  <a href="https://api.whatsapp.com/send?phone=5531987245838&text=Olá! Gostaria de falar com o Hortifruti J&M." class="float-btn float-wpp" target="_blank" title="Falar no WhatsApp">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
-  </a>
-</div>
+  <main>
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="🔍 Buscar produto (Ex: Morango, Melancia...)">
+    </div>
 
-<!--
-  ========================================================
-  TEMPLATE DO CARD DO PRODUTO
-  Edite aqui como cada card de produto aparece na vitrine.
-  NÃO MUDE OS NOMES DOS MARCADORES ABAIXO.
-  ========================================================
--->
-<!-- TEMPLATE_CARD_PRODUTO -->
-<div class="vitrine-card">
-  {img_html}
-  <div class="vitrine-nome">{nome_curto}</div>
-  <div class="vitrine-preco"><b>R$ {preco_venda}</b></div>
-  {estoque_html}
-</div>
-<!-- FIM_TEMPLATE_CARD_PRODUTO -->
+    <!-- Div onde os produtos aparecerão dinamicamente -->
+    <div id="vitrineGrid" class="vitrine-grid">
+      <p style="text-align:center; width:100%; color:#888;">Carregando produtos...</p>
+    </div>
+  </main>
+
+  <!-- ===== BOTÕES FLUTUANTES (REDES E LOCAL) ===== -->
+  <div class="social-floats">
+    <a href="https://maps.app.goo.gl/vjrxKczdCQGKZPa29" class="float-btn" target="_blank" title="Ver no Mapa">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/a/aa/Google_Maps_icon_%282020%29.svg" alt="Google Maps">
+    </a>
+    <a href="https://www.instagram.com/chacaraabelardinho/" class="float-btn" target="_blank" title="Nosso Instagram">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram">
+    </a>
+    <a href="https://api.whatsapp.com/send?phone=5531987245838&text=Olá! Gostaria de falar com o Hortifruti J&M." class="float-btn float-wpp" target="_blank" title="Falar no WhatsApp">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    </a>
+  </div>
+
+  <!-- Botão Acesso Admin Oculto (no rodapé) -->
+  <a href="login.html" class="admin-link">⚙️</a>
+
+  <script src="js/supabase_client.js"></script>
+  <script src="js/vitrine.js"></script>
+  <script src="js/accessibility.js"></script>
+</body>
+</html>

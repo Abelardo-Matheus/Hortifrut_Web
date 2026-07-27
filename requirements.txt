@@ -1,4 +1,0 @@
-streamlit==1.40.1
-supabase==2.11.0
-streamlit-cookies-controller==0.0.4
-rembg[cpu]
