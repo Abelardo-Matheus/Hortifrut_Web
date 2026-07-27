@@ -5,7 +5,7 @@
 /* ===== CABEÇALHO: VÍDEO LOGO ===== */
 .video-container {
     position: relative;
-    width: 100%;
+    width: 100vw;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,9 +14,8 @@
 }
 
 .logo-video {
-    width: 100%;
-    height: auto;
-    max-height: 55vh;
+    width: 100vw;
+    height: 60vh; /* Set a fixed responsive height for a true hero banner */
     object-fit: cover;
     display: block;
 }
@@ -30,9 +29,9 @@ main {
 /* ===== BUSCA ===== */
 .search-container {
     position: absolute;
-    bottom: 40px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: 90%;
     display: flex;
     justify-content: center;
