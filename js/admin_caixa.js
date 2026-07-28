@@ -51,7 +51,7 @@ function renderCaixaProdutos(produtos) {
             const numEstoque = p.quantidade_estoque % 1 === 0 ? p.quantidade_estoque : Number(p.quantidade_estoque).toFixed(3);
             estoqueStatus = p.producao_propria 
                 ? `<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: Disponível</div>`
-                : `<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: ${numEstoque} ${p.unidade_medida || 'Un'}</div>`;
+                : `<div style="text-align:center;color:#27ae60;font-size:12px;font-weight:bold;margin-bottom:5px;">Estoque: ${numEstoque} ${p.unidade_medida === 'Un' ? 'Unidade' : p.unidade_medida === 'Kg' ? 'Kilos' : p.unidade_medida || 'Unidade'}</div>`;
         }
 
         const addBtn = isEsgotado 
@@ -77,44 +77,75 @@ buscaCaixa.addEventListener('input', (e) => {
 });
 
 // Carrinho de Compras
-window.adicionarAoCarrinho = function(produto) {
-    let qtdAdd = 1;
-    if(produto.unidade_medida && produto.unidade_medida.toLowerCase() === 'kg') {
-        const input = prompt(`Digite a quantidade em Kg para ${produto.nome}:`, "0.50");
-        if(!input) return;
-        qtdAdd = parseFloat(input.replace(',', '.'));
-        if(isNaN(qtdAdd) || qtdAdd <= 0) return alert("Quantidade inválida!");
-    }
+let produtoTempAdicionar = null;
 
-    const existe = carrinho.find(item => item.produto_id === produto.id);
-    if(existe) {
-        existe.quantidade += qtdAdd;
-        existe.subtotal = existe.quantidade * existe.preco_unitario;
-    } else {
-        carrinho.push({
-            produto_id: produto.id,
-            nome: produto.nome,
-            preco_unitario: produto.preco_venda,
-            preco_custo: produto.preco_custo,
-            quantidade: qtdAdd,
-            subtotal: qtdAdd * produto.preco_venda,
-            estoque_atual: produto.quantidade_estoque,
-            producao_propria: produto.producao_propria,
-            unidade_medida: produto.unidade_medida || 'Un'
+window.fecharModalAddCarrinho = function() {
+    const modal = document.getElementById('modalAddCarrinho');
+    if(modal) modal.classList.remove('active');
+    produtoTempAdicionar = null;
+}
+
+window.adicionarAoCarrinho = function(produto) {
+    produtoTempAdicionar = produto;
+    document.getElementById('modalAddCarrinhoTitle').textContent = `Adicionar: ${produto.nome}`;
+    
+    const isKg = produto.unidade_medida && (produto.unidade_medida.toLowerCase() === 'kg' || produto.unidade_medida.toLowerCase() === 'kilos');
+    document.getElementById('lblAddCarrinhoQtd').textContent = isKg ? 'Peso (Kilos)' : 'Quantidade (Unidade)';
+    document.getElementById('addCarrinhoQtd').value = isKg ? '0.50' : '1';
+    document.getElementById('addCarrinhoPreco').value = Number(produto.preco_venda).toFixed(2);
+    
+    const estoqueNum = produto.quantidade_estoque % 1 === 0 ? produto.quantidade_estoque : Number(produto.quantidade_estoque).toFixed(3);
+    document.getElementById('modalAddCarrinhoDesc').textContent = 
+        produto.producao_propria ? 'Produção Própria (Ilimitado)' : `Estoque atual: ${estoqueNum} ${produto.unidade_medida === 'Un' ? 'Unidade' : produto.unidade_medida === 'Kg' ? 'Kilos' : produto.unidade_medida || 'Unidade'}`;
+
+    document.getElementById('modalAddCarrinho').classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const formAddCarrinho = document.getElementById('formAddCarrinho');
+    if(formAddCarrinho) {
+        formAddCarrinho.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(!produtoTempAdicionar) return;
+
+            const qtdAdd = parseFloat(document.getElementById('addCarrinhoQtd').value);
+            const precoVendaEditado = parseFloat(document.getElementById('addCarrinhoPreco').value);
+
+            if(isNaN(qtdAdd) || qtdAdd <= 0) return alert("Quantidade inválida!");
+            if(isNaN(precoVendaEditado) || precoVendaEditado < 0) return alert("Preço inválido!");
+
+            const existe = carrinho.find(item => item.produto_id === produtoTempAdicionar.id);
+            if(existe) {
+                existe.quantidade += qtdAdd;
+                existe.preco_unitario = precoVendaEditado;
+                existe.subtotal = existe.quantidade * existe.preco_unitario;
+            } else {
+                carrinho.push({
+                    produto_id: produtoTempAdicionar.id,
+                    nome: produtoTempAdicionar.nome,
+                    preco_unitario: precoVendaEditado,
+                    preco_custo: produtoTempAdicionar.preco_custo,
+                    quantidade: qtdAdd,
+                    subtotal: qtdAdd * precoVendaEditado,
+                    estoque_atual: produtoTempAdicionar.quantidade_estoque,
+                    producao_propria: produtoTempAdicionar.producao_propria,
+                    unidade_medida: produtoTempAdicionar.unidade_medida === 'Un' ? 'Unidade' : produtoTempAdicionar.unidade_medida === 'Kg' ? 'Kilos' : produtoTempAdicionar.unidade_medida || 'Unidade'
+                });
+            }
+            
+            const msg = document.getElementById('msgCaixa');
+            msg.style.display = 'block';
+            msg.style.backgroundColor = 'rgba(39, 174, 96, 0.1)';
+            msg.style.color = '#27ae60';
+            msg.style.border = '1px solid #27ae60';
+            msg.textContent = `✅ ${produtoTempAdicionar.nome} adicionado!`;
+            setTimeout(() => msg.style.display = 'none', 3000);
+
+            renderCarrinho();
+            window.fecharModalAddCarrinho();
         });
     }
-    
-    // Mostra mensagem temporária
-    const msg = document.getElementById('msgCaixa');
-    msg.style.display = 'block';
-    msg.style.backgroundColor = 'rgba(39, 174, 96, 0.1)';
-    msg.style.color = '#27ae60';
-    msg.style.border = '1px solid #27ae60';
-    msg.textContent = `✅ ${produto.nome} adicionado!`;
-    setTimeout(() => msg.style.display = 'none', 3000);
-
-    renderCarrinho();
-}
+});
 
 window.removerDoCarrinho = function(index) {
     carrinho.splice(index, 1);
@@ -377,6 +408,7 @@ async function loadContaCliente(cliente) {
                 <div style="flex:2;">${valHtml}</div>
                 <div style="flex:1; display:flex; gap:5px; justify-content:flex-end;">
                     <button class="st-button" style="padding:5px;" onclick="pagarItemUnico(${c.id})" title="Pagar este item">💲</button>
+                    <button class="st-button" style="padding:5px;" onclick='editarCompraFiado(${JSON.stringify(c)})' title="Editar item">✏️</button>
                     <button class="st-button" style="padding:5px; border-color:#e74c3c; color:#e74c3c;" onclick="excluirCompraFiado(${c.id})" title="Excluir item">🗑️</button>
                 </div>
             `;
@@ -401,14 +433,108 @@ window.pagarItemUnico = async function(id) {
 window.excluirCompraFiado = async function(id) {
     if(confirm("Excluir este item anotado? (Devolverá o estoque)")) {
         try {
-            // Se precisar devolver estoque, teria que buscar a quantidade e atualizar o produto.
-            // Para simplificar, apagamos o registro apenas, mas no app.py havia devolução.
             await window.supabase.from('compras_anotadas').delete().eq('id', id);
             alert("Item excluído!");
             loadContaCliente(clienteSelecionadoFiado);
-        } catch(e) { alert("Erro"); }
+        } catch(e) { alert("Erro ao excluir. Verifique as permissões no banco."); }
     }
 }
+
+window.editarCompraFiado = function(c) {
+    document.getElementById('editFiadoId').value = c.id;
+    document.getElementById('editFiadoQtd').value = c.quantidade;
+    document.getElementById('editFiadoPreco').value = c.preco_unitario;
+    document.getElementById('modalEditFiado').classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Editar Fiado
+    const formEditFiado = document.getElementById('formEditFiado');
+    if(formEditFiado) {
+        formEditFiado.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editFiadoId').value;
+            const qtd = parseFloat(document.getElementById('editFiadoQtd').value);
+            const preco = parseFloat(document.getElementById('editFiadoPreco').value);
+
+            try {
+                await window.supabase.from('compras_anotadas').update({
+                    quantidade: qtd,
+                    preco_unitario: preco
+                }).eq('id', id);
+                document.getElementById('modalEditFiado').classList.remove('active');
+                loadContaCliente(clienteSelecionadoFiado);
+                alert("Anotado editado com sucesso!");
+            } catch(err) {
+                alert("Erro ao editar o anotado. Verifique as permissões no banco.");
+            }
+        });
+    }
+
+    // Editar e Excluir Cliente
+    const btnEditCliente = document.getElementById('btnEditCliente');
+    const btnDeleteCliente = document.getElementById('btnDeleteCliente');
+    const formEditCliente = document.getElementById('formEditCliente');
+
+    if(btnEditCliente) {
+        btnEditCliente.addEventListener('click', () => {
+            if(!clienteSelecionadoFiado) return;
+            document.getElementById('editClienteId').value = clienteSelecionadoFiado.id;
+            document.getElementById('editClienteNome').value = clienteSelecionadoFiado.nome;
+            document.getElementById('editClienteTel').value = clienteSelecionadoFiado.telefone || '';
+            document.getElementById('modalEditCliente').classList.add('active');
+        });
+    }
+
+    if(btnDeleteCliente) {
+        btnDeleteCliente.addEventListener('click', async () => {
+            if(!clienteSelecionadoFiado) return;
+            if(confirm(`Tem certeza que deseja excluir o cliente ${clienteSelecionadoFiado.nome}?\nISSO APAGARÁ TODO O HISTÓRICO DELE! (Caso as permissões do banco permitam cascade)`)) {
+                try {
+                    await window.supabase.from('clientes').delete().eq('id', clienteSelecionadoFiado.id);
+                    alert("Cliente excluído com sucesso!");
+                    
+                    document.getElementById('selectClienteFiado').value = '';
+                    document.getElementById('contaClienteDetalhe').style.display = 'none';
+                    document.getElementById('contaClienteVazia').style.display = 'block';
+                    clienteSelecionadoFiado = null;
+                    
+                    fetchClientes();
+                } catch(err) {
+                    alert("Erro ao excluir o cliente. Verifique permissões ou se ele tem compras vinculadas e o banco não permite cascade.");
+                }
+            }
+        });
+    }
+
+    if(formEditCliente) {
+        formEditCliente.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editClienteId').value;
+            const nome = document.getElementById('editClienteNome').value;
+            const tel = document.getElementById('editClienteTel').value;
+
+            try {
+                await window.supabase.from('clientes').update({
+                    nome: nome,
+                    telefone: tel
+                }).eq('id', id);
+                document.getElementById('modalEditCliente').classList.remove('active');
+                
+                // Atualiza info no select
+                clienteSelecionadoFiado.nome = nome;
+                clienteSelecionadoFiado.telefone = tel;
+                document.getElementById('nomeContaCliente').textContent = `Conta de: ${nome}`;
+                document.getElementById('telContaCliente').textContent = tel ? `📞 ${tel}` : '';
+                
+                fetchClientes();
+                alert("Cliente editado com sucesso!");
+            } catch(err) {
+                alert("Erro ao editar o cliente. Verifique as permissões no banco.");
+            }
+        });
+    }
+});
 
 document.getElementById('btnPagarContaInteira').addEventListener('click', async () => {
     if(!clienteSelecionadoFiado || comprasFiadoAbertas.length === 0) return;
@@ -455,7 +581,7 @@ function renderSelectProdutoFiado(produtos) {
         opt.value = p.id;
         opt.textContent = p.nome;
         opt.dataset.preco = p.preco_venda;
-        opt.dataset.iskg = (p.unidade_medida || '').toLowerCase() === 'kg';
+        opt.dataset.iskg = (p.unidade_medida || '').toLowerCase() === 'kg' || (p.unidade_medida || '').toLowerCase() === 'kilos';
         sel.appendChild(opt);
     });
 }
@@ -470,7 +596,7 @@ document.getElementById('selectProdutoFiado').addEventListener('change', (e) => 
     const opt = e.target.options[e.target.selectedIndex];
     if(opt) {
         document.getElementById('precoNovaCompraFiado').value = opt.dataset.preco;
-        document.getElementById('lblQtdFiado').textContent = opt.dataset.iskg === 'true' ? "Peso (Kg)" : "Quantidade";
+        document.getElementById('lblQtdFiado').textContent = opt.dataset.iskg === 'true' ? "Peso (Kilos)" : "Quantidade";
     }
 });
 

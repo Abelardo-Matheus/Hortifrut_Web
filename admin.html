@@ -135,8 +135,16 @@
           <!-- Coluna 2 (Detalhes da Conta) -->
           <div style="flex: 2;">
             <div id="contaClienteDetalhe" style="display:none;">
-              <h3 id="nomeContaCliente" style="font-size: 18px;">Conta de: ...</h3>
-              <div id="telContaCliente" style="font-size:14px; color:var(--text-secondary); margin-bottom:15px;"></div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <h3 id="nomeContaCliente" style="font-size: 18px;">Conta de: ...</h3>
+                  <div id="telContaCliente" style="font-size:14px; color:var(--text-secondary); margin-bottom:15px;"></div>
+                </div>
+                <div>
+                  <button id="btnEditCliente" class="st-button" style="padding: 5px 10px;">✏️ Editar Cliente</button>
+                  <button id="btnDeleteCliente" class="st-button" style="padding: 5px 10px; border-color:#e74c3c; color:#e74c3c;">🗑️ Excluir Cliente</button>
+                </div>
+              </div>
               
               <div id="dividaTotalFiado" style="background: rgba(231,76,60,0.1); border: 1px solid #e74c3c; color:#e74c3c; padding: 15px; border-radius: 5px; font-size:18px; font-weight:bold; margin-bottom:20px;">
                 Dívida Total: R$ 0,00
@@ -317,8 +325,8 @@
           <div class="form-group">
             <label>Medida</label>
             <select id="prodMedida">
-              <option>Un</option>
-              <option>Kg</option>
+              <option value="Unidade">Unidade</option>
+              <option value="Kilos">Kilos</option>
             </select>
           </div>
 
@@ -347,6 +355,171 @@
 
         <div class="modal-actions">
           <button type="button" class="btn-cancel" onclick="fecharModalProduto()">Cancelar</button>
+          <button type="submit" class="btn-save">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CARRINHO (CAIXA) -->
+  <div id="modalAddCarrinho" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2 id="modalAddCarrinhoTitle">Adicionar Produto</h2>
+      <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; text-align: center;" id="modalAddCarrinhoDesc"></div>
+      
+      <form id="formAddCarrinho">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label id="lblAddCarrinhoQtd">Quantidade</label>
+            <input type="number" step="0.01" id="addCarrinhoQtd" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Preço Unitário (R$)</label>
+            <input type="number" step="0.01" id="addCarrinhoPreco" required>
+            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">Edite para aplicar desconto ou promoção.</div>
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button type="button" class="btn-cancel" onclick="fecharModalAddCarrinho()">Cancelar</button>
+          <button type="submit" class="btn-save" style="background-color: #27ae60;">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR CLIENTE -->
+  <div id="modalEditCliente" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2>Editar Cliente</h2>
+      <form id="formEditCliente">
+        <input type="hidden" id="editClienteId">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label>Nome</label>
+            <input type="text" id="editClienteNome" required>
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="editClienteTel">
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('modalEditCliente').classList.remove('active')">Cancelar</button>
+          <button type="submit" class="btn-save">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR FIADO -->
+  <div id="modalEditFiado" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2>Editar Anotado</h2>
+      <form id="formEditFiado">
+        <input type="hidden" id="editFiadoId">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label>Quantidade</label>
+            <input type="number" step="0.01" id="editFiadoQtd" required>
+          </div>
+          <div class="form-group">
+            <label>Preço Unitário (R$)</label>
+            <input type="number" step="0.01" id="editFiadoPreco" required>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('modalEditFiado').classList.remove('active')">Cancelar</button>
+          <button type="submit" class="btn-save">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR RETIRADA -->
+  <div id="modalEditRetirada" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2>Editar Retirada</h2>
+      <form id="formEditRetirada">
+        <input type="hidden" id="editRetiradaId">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label>Quantidade</label>
+            <input type="number" step="0.01" id="editRetiradaQtd" required>
+          </div>
+          <div class="form-group">
+            <label>Custo Unitário (R$)</label>
+            <input type="number" step="0.01" id="editRetiradaCusto" required>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('modalEditRetirada').classList.remove('active')">Cancelar</button>
+          <button type="submit" class="btn-save">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR VENDA -->
+  <div id="modalEditVenda" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2>Editar Venda</h2>
+      <form id="formEditVenda">
+        <input type="hidden" id="editVendaId">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label>Valor Total (R$)</label>
+            <input type="number" step="0.01" id="editVendaValor" required>
+          </div>
+          <div class="form-group">
+            <label>Lucro Total (R$)</label>
+            <input type="number" step="0.01" id="editVendaLucro" required>
+          </div>
+          <div class="form-group">
+            <label>Forma de Pagamento</label>
+            <select id="editVendaPagamento">
+              <option>Dinheiro</option>
+              <option>PIX</option>
+              <option>Cartão Crédito</option>
+              <option>Cartão Débito</option>
+              <option>Pagamento Fiado</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('modalEditVenda').classList.remove('active')">Cancelar</button>
+          <button type="submit" class="btn-save">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR SOLICITACAO -->
+  <div id="modalEditSolicitacao" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2>Editar Solicitação</h2>
+      <form id="formEditSolicitacao">
+        <input type="hidden" id="editSolicitacaoId">
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+          <div class="form-group">
+            <label>Produto Solicitado</label>
+            <input type="text" id="editSolProduto" required>
+          </div>
+          <div class="form-group">
+            <label>Nome Cliente</label>
+            <input type="text" id="editSolCliente" required>
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="editSolTelefone">
+          </div>
+          <div class="form-group checkbox-group">
+            <label><input type="checkbox" id="editSolWhats"> Receber via WhatsApp</label>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button type="button" class="btn-cancel" onclick="document.getElementById('modalEditSolicitacao').classList.remove('active')">Cancelar</button>
           <button type="submit" class="btn-save">Salvar</button>
         </div>
       </form>

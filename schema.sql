@@ -104,27 +104,16 @@ ALTER TABLE compras_anotadas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE retiradas_casa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE balanco_mensal ENABLE ROW LEVEL SECURITY;
 
--- Políticas para Produtos
-CREATE POLICY "Permitir leitura pública de produtos" ON produtos FOR SELECT USING (true);
-CREATE POLICY "Permitir inserção de produtos" ON produtos FOR INSERT WITH CHECK (true);
-CREATE POLICY "Permitir atualização de produtos" ON produtos FOR UPDATE USING (true);
-CREATE POLICY "Permitir deleção de produtos" ON produtos FOR DELETE USING (true);
-
--- Políticas para Vendas
-CREATE POLICY "Permitir leitura de vendas" ON vendas FOR SELECT USING (true);
-CREATE POLICY "Permitir inserção de vendas" ON vendas FOR INSERT WITH CHECK (true);
-
--- Políticas para Itens da Venda
-CREATE POLICY "Permitir leitura de itens de venda" ON itens_venda FOR SELECT USING (true);
-CREATE POLICY "Permitir inserção de itens de venda" ON itens_venda FOR INSERT WITH CHECK (true);
-
 -- Políticas Básicas (Permitir CRUD completo anonimamente para agilizar o PDV local)
+-- ATENÇÃO: É PRECISO EXECUTAR ESTES COMANDOS NO SUPABASE PARA LIBERAR AS EXCLUSÕES E EDIÇÕES!
+
+CREATE POLICY "Permitir tudo em produtos" ON produtos FOR ALL USING (true);
+CREATE POLICY "Permitir tudo em vendas" ON vendas FOR ALL USING (true);
+CREATE POLICY "Permitir tudo em itens_venda" ON itens_venda FOR ALL USING (true);
 CREATE POLICY "Permitir tudo em clientes" ON clientes FOR ALL USING (true);
 CREATE POLICY "Permitir tudo em compras_anotadas" ON compras_anotadas FOR ALL USING (true);
 CREATE POLICY "Permitir tudo em retiradas_casa" ON retiradas_casa FOR ALL USING (true);
 CREATE POLICY "Permitir tudo em balanco_mensal" ON balanco_mensal FOR ALL USING (true);
-
--- ==========================================================
 
 -- ==========================================================
 -- SOLICITAÇÕES DE PRODUTOS
@@ -138,3 +127,6 @@ CREATE TABLE IF NOT EXISTS public.solicitacoes (
     status VARCHAR(20) DEFAULT 'Pendente' CHECK (status IN ('Pendente', 'Atendido', 'Recusado')),
     data_solicitacao TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE solicitacoes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir tudo em solicitacoes" ON solicitacoes FOR ALL USING (true);

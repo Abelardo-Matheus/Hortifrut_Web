@@ -128,6 +128,7 @@ async function fetchRetiradasMes() {
                 <div style="flex:2;">📅 ${dateFmt} - <strong>${nomeProd}</strong></div>
                 <div style="flex:1;">${r.quantidade} ${unMedida}</div>
                 <div style="flex:1;">📉 <strong>R$ ${subtotal.toFixed(2)}</strong></div>
+                <button class="st-button" style="padding:5px;" onclick='editarRetirada(${JSON.stringify(r)})' title="Editar Retirada">✏️</button>
                 <button class="st-button" style="padding:5px; border-color:#e74c3c; color:#e74c3c;" onclick="excluirRetirada(${r.id})">🗑️</button>
             `;
             listaRetiradasMes.appendChild(row);
@@ -146,6 +147,37 @@ window.excluirRetirada = async function(id) {
             await window.supabase.from('retiradas_casa').delete().eq('id', id);
             alert("Retirada excluída!");
             fetchRetiradasMes();
-        } catch(e) { alert("Erro"); }
+        } catch(e) { alert("Erro ao excluir. Verifique permissões."); }
     }
 }
+
+window.editarRetirada = function(r) {
+    document.getElementById('editRetiradaId').value = r.id;
+    document.getElementById('editRetiradaQtd').value = r.quantidade;
+    document.getElementById('editRetiradaCusto').value = r.custo_unitario;
+    document.getElementById('modalEditRetirada').classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const formEditRetirada = document.getElementById('formEditRetirada');
+    if(formEditRetirada) {
+        formEditRetirada.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editRetiradaId').value;
+            const qtd = parseFloat(document.getElementById('editRetiradaQtd').value);
+            const custo = parseFloat(document.getElementById('editRetiradaCusto').value);
+
+            try {
+                await window.supabase.from('retiradas_casa').update({
+                    quantidade: qtd,
+                    custo_unitario: custo
+                }).eq('id', id);
+                document.getElementById('modalEditRetirada').classList.remove('active');
+                fetchRetiradasMes();
+                alert("Retirada editada com sucesso!");
+            } catch(err) {
+                alert("Erro ao editar retirada. Verifique permissões.");
+            }
+        });
+    }
+});

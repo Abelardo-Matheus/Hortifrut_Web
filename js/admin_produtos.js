@@ -40,7 +40,7 @@ function renderAdminTable(produtos) {
 
         let estoqueHtml = p.producao_propria
             ? `Estoque: ${p.quantidade_estoque > 0 ? 'Disponível' : 'Não Disponível'} (Prod. Própria)`
-            : `Estoque: ${p.quantidade_estoque} ${p.unidade_medida || 'Un'}`;
+            : `Estoque: ${p.quantidade_estoque} ${p.unidade_medida === 'Un' ? 'Unidade' : p.unidade_medida === 'Kg' ? 'Kilos' : p.unidade_medida || 'Unidade'}`;
 
         card.innerHTML = `
             ${imgHtml}
@@ -83,7 +83,7 @@ function abrirModalEdicao(p) {
     document.getElementById('prodNome').value = p.nome;
     document.getElementById('prodCodigo').value = p.codigo_barras || '';
     document.getElementById('prodCat').value = p.categoria;
-    document.getElementById('prodMedida').value = p.unidade_medida || 'Un';
+    document.getElementById('prodMedida').value = (p.unidade_medida === 'Un' ? 'Unidade' : p.unidade_medida === 'Kg' ? 'Kilos' : p.unidade_medida) || 'Unidade';
     document.getElementById('prodCusto').value = p.preco_custo;
     document.getElementById('prodVenda').value = p.preco_venda;
     document.getElementById('prodEstoque').value = p.quantidade_estoque;

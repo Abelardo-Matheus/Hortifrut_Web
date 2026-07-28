@@ -87,7 +87,8 @@ async function fetchRelatorios() {
                 <div style="flex:2;">📅 ${dateFmt}</div>
                 <div style="flex:1;">Pag: ${v.forma_pagamento}</div>
                 <div style="flex:1;">💰 <strong>R$ ${v.valor_total.toFixed(2)}</strong></div>
-                <button class="st-button" style="padding:5px; border-color:#e74c3c; color:#e74c3c;" onclick="excluirVenda(${v.id})">🗑️</button>
+                <button class="st-button" style="padding:5px;" onclick='editarVenda(${JSON.stringify(v)})' title="Editar Venda">✏️</button>
+                <button class="st-button" style="padding:5px; border-color:#e74c3c; color:#e74c3c;" onclick="excluirVenda('${v.id}')">🗑️</button>
             `;
             listaVendasGeral.appendChild(row);
         });
@@ -105,10 +106,45 @@ window.excluirVenda = async function(id) {
             fetchRelatorios();
             fetchProducaoPropria();
         } catch(e) {
-            alert("Erro ao excluir venda");
+            alert("Erro ao excluir venda. Verifique as permissões.");
         }
     }
 }
+
+window.editarVenda = function(v) {
+    document.getElementById('editVendaId').value = v.id;
+    document.getElementById('editVendaValor').value = v.valor_total;
+    document.getElementById('editVendaLucro').value = v.lucro_total;
+    document.getElementById('editVendaPagamento').value = v.forma_pagamento;
+    document.getElementById('modalEditVenda').classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const formEditVenda = document.getElementById('formEditVenda');
+    if(formEditVenda) {
+        formEditVenda.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editVendaId').value;
+            const valor = parseFloat(document.getElementById('editVendaValor').value);
+            const lucro = parseFloat(document.getElementById('editVendaLucro').value);
+            const forma = document.getElementById('editVendaPagamento').value;
+
+            try {
+                await window.supabase.from('vendas').update({
+                    valor_total: valor,
+                    lucro_total: lucro,
+                    forma_pagamento: forma
+                }).eq('id', id);
+                document.getElementById('modalEditVenda').classList.remove('active');
+                fetchRelatorios();
+                fetchProducaoPropria();
+                alert("Venda editada com sucesso!");
+            } catch(err) {
+                alert("Erro ao editar a venda. Verifique as permissões.");
+            }
+        });
+    }
+});
 
 async function fetchProducaoPropria() {
     try {

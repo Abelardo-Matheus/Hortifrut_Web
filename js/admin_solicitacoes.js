@@ -67,6 +67,8 @@ async function fetchSolicitacoes() {
                 </div>
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
                     ${actionBtns}
+                    <button class="st-button" style="width:100%; margin-bottom:5px;" onclick='editarSolicitacao(${JSON.stringify(r)})'>✏️ Editar</button>
+                    <button class="st-button" style="width:100%; border-color:#e74c3c; color:#e74c3c;" onclick="excluirSolicitacao(${r.id})">🗑️ Excluir</button>
                 </div>
             `;
             listaSolicitacoes.appendChild(row);
@@ -86,3 +88,52 @@ window.updateSolicitacaoStatus = async function(id, status) {
         alert("Erro ao atualizar status");
     }
 }
+
+window.excluirSolicitacao = async function(id) {
+    if(confirm("Deseja realmente excluir esta solicitação?")) {
+        try {
+            await window.supabase.from('solicitacoes').delete().eq('id', id);
+            alert("Solicitação excluída.");
+            fetchSolicitacoes();
+        } catch(e) {
+            alert("Erro ao excluir. Verifique as permissões.");
+        }
+    }
+}
+
+window.editarSolicitacao = function(s) {
+    document.getElementById('editSolicitacaoId').value = s.id;
+    document.getElementById('editSolProduto').value = s.nome_produto;
+    document.getElementById('editSolCliente').value = s.nome_cliente;
+    document.getElementById('editSolTelefone').value = s.telefone || '';
+    document.getElementById('editSolWhats').checked = s.receber_whatsapp;
+    document.getElementById('modalEditSolicitacao').classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const formEditSolicitacao = document.getElementById('formEditSolicitacao');
+    if(formEditSolicitacao) {
+        formEditSolicitacao.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editSolicitacaoId').value;
+            const produto = document.getElementById('editSolProduto').value;
+            const cliente = document.getElementById('editSolCliente').value;
+            const tel = document.getElementById('editSolTelefone').value;
+            const whats = document.getElementById('editSolWhats').checked;
+
+            try {
+                await window.supabase.from('solicitacoes').update({
+                    nome_produto: produto,
+                    nome_cliente: cliente,
+                    telefone: tel,
+                    receber_whatsapp: whats
+                }).eq('id', id);
+                document.getElementById('modalEditSolicitacao').classList.remove('active');
+                fetchSolicitacoes();
+                alert("Solicitação editada com sucesso!");
+            } catch(err) {
+                alert("Erro ao editar. Verifique permissões.");
+            }
+        });
+    }
+});
