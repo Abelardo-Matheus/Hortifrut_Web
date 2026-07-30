@@ -22,7 +22,32 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLightMode = localStorage.getItem('userTheme') === 'light';
 
     function applyZoom() {
-        document.body.style.zoom = currentZoom;
+        const appContent = document.getElementById('app-content');
+        
+        if (appContent) {
+            // Remove zoom se existir (limpeza de estado anterior)
+            document.body.style.zoom = '';
+            
+            appContent.style.transform = `scale(${currentZoom})`;
+            appContent.style.transformOrigin = 'top center';
+            
+            // Ajustar largura para compensar a escala e não estourar a tela ou ficar com muito espaço branco nas laterais
+            if (currentZoom !== 1) {
+                appContent.style.width = `${100 / currentZoom}%`;
+                appContent.style.margin = '0 auto';
+            } else {
+                appContent.style.width = '100%';
+                appContent.style.margin = '0';
+            }
+        } else {
+            // Fallback (se a div #app-content não for encontrada)
+            document.body.style.zoom = currentZoom;
+            if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+                document.body.style.transform = `scale(${currentZoom})`;
+                document.body.style.transformOrigin = 'top center';
+            }
+        }
+        
         localStorage.setItem('userZoom', currentZoom);
     }
     
@@ -74,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         btn.addEventListener('click', () => {
             if (config.isZoom) {
-                let newZoom = currentZoom + config.step;
+                let newZoom = Math.round((currentZoom + config.step) * 10) / 10;
                 if(newZoom >= 0.8 && newZoom <= 1.5) {
                     currentZoom = newZoom;
                     applyZoom();
