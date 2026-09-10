@@ -20,7 +20,7 @@
     --a-radius: 10px;
 }
 
-body:has(.admin-shell) {
+body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     background: var(--a-bg);
     color: var(--a-text);
@@ -587,6 +587,8 @@ body:has(.admin-shell) {
     border-radius: 6px;
     font-size: 14px;
     outline: none;
+    background: white;
+    color: var(--a-text);
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
