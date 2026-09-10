@@ -18,7 +18,7 @@ async function carregarProdutos() {
 
         if (error) {
             console.error("Erro ao buscar produtos:", error);
-            vitrineGrid.innerHTML = `<p style="color:red; text-align:center; width:100%;">Erro ao carregar produtos. Tente recarregar a página.</p>`;
+            vitrineGrid.innerHTML = `<p class="vt-error">Erro ao carregar produtos. Tente recarregar a página.</p>`;
             return;
         }
 
@@ -32,7 +32,7 @@ async function carregarProdutos() {
 // Renderiza a lista de produtos na grade
 function renderizarProdutos(produtos) {
     if (produtos.length === 0) {
-        vitrineGrid.innerHTML = `<p style="text-align:center; width:100%; color:var(--text-secondary);">Nenhum produto encontrado.</p>`;
+        vitrineGrid.innerHTML = `<p class="vt-empty">Nenhum produto encontrado.</p>`;
         return;
     }
 
