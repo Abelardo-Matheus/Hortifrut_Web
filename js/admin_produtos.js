@@ -1,11 +1,21 @@
 // ==========================================
-// CRUD de Produtos (Admin)
+// CRUD de Produtos (Aba Estoque)
 // ==========================================
 
 let adminProducts = [];
 const buscaInput = document.getElementById('buscaProdutoAdmin');
 const modalProduto = document.getElementById('modalProduto');
 const formProduto = document.getElementById('formProduto');
+
+const ESTOQUE_CRITICO_LIMITE = 5;
+
+function unidadeLabel(p) {
+    return p.unidade_medida === 'Un' ? 'Unidade' : p.unidade_medida === 'Kg' ? 'Kilos' : (p.unidade_medida || 'Unidade');
+}
+
+function isEstoqueIlimitado(p) {
+    return p.producao_propria || p.categoria === 'Horta (Ilimitado)';
+}
 
 // Busca produtos ao iniciar
 async function fetchAdminProdutos() {
@@ -14,55 +24,83 @@ async function fetchAdminProdutos() {
         if (error) throw error;
         adminProducts = data;
         renderAdminTable(adminProducts);
+        renderEstoquesCriticos(adminProducts);
         document.dispatchEvent(new Event('produtosCarregados'));
     } catch (err) {
         console.error("Erro ao buscar produtos admin:", err);
-        const grid = document.getElementById('gridAdminProdutos');
-        grid.innerHTML = `<p style="color:red; text-align:center; width:100%;">Erro ao carregar banco de dados.</p>`;
+        const body = document.getElementById('estoqueBody');
+        if (body) body.innerHTML = `<tr><td colspan="6" class="empty" style="color:#e74c3c;">Erro ao carregar banco de dados.</td></tr>`;
     }
 }
 
 function renderAdminTable(produtos) {
-    const grid = document.getElementById('gridAdminProdutos');
-    if(produtos.length === 0) {
-        grid.innerHTML = `<p style="text-align:center; width:100%;">Nenhum produto cadastrado.</p>`;
+    const body = document.getElementById('estoqueBody');
+    if (!body) return;
+
+    if (produtos.length === 0) {
+        body.innerHTML = `<tr><td colspan="6" class="empty">Nenhum produto cadastrado.</td></tr>`;
         return;
     }
 
-    grid.innerHTML = '';
-    produtos.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'st-card';
-        
-        let imgHtml = p.imagem_url 
-            ? `<div style="display: flex; justify-content: center; height: 100px; align-items: center; margin-bottom: 5px;"><img src="${p.imagem_url}" style="max-width: 100%; max-height: 100px; object-fit: contain; border-radius: 5px;"></div>` 
-            : `<div style="height: 105px; display:flex; align-items:center; justify-content:center; border-radius:5px; opacity: 0.5;">Sem Foto</div>`;
+    body.innerHTML = produtos.map(p => {
+        const margem = p.preco_venda > 0 ? (((p.preco_venda - p.preco_custo) / p.preco_venda) * 100).toFixed(1) : '0.0';
+        const estoqueTxt = isEstoqueIlimitado(p)
+            ? (p.quantidade_estoque > 0 ? 'Disponível' : 'Não Disponível')
+            : `${Number(p.quantidade_estoque) % 1 === 0 ? p.quantidade_estoque : Number(p.quantidade_estoque).toFixed(3)} ${unidadeLabel(p)}`;
+        const imgHtml = p.imagem_url
+            ? `<img src="${p.imagem_url}" class="td-img" alt="${p.nome}">`
+            : `<div class="td-img" style="display:flex;align-items:center;justify-content:center;font-size:16px;">🥬</div>`;
 
-        let estoqueHtml = p.producao_propria
-            ? `Estoque: ${p.quantidade_estoque > 0 ? 'Disponível' : 'Não Disponível'} (Prod. Própria)`
-            : `Estoque: ${p.quantidade_estoque} ${p.unidade_medida === 'Un' ? 'Unidade' : p.unidade_medida === 'Kg' ? 'Kilos' : p.unidade_medida || 'Unidade'}`;
-
-        card.innerHTML = `
-            ${imgHtml}
-            <div style="text-align:center;font-size:15px;font-weight:bold;margin-bottom:5px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;" title="${p.nome}">${p.nome}</div>
-            <div style="margin-top:auto;font-size: 14px; margin-bottom: 5px; text-align: center;"><b>R$ ${Number(p.preco_venda).toFixed(2).replace('.', ',')}</b></div>
-            <div style="font-size: 13px; opacity: 0.7; margin-bottom: 10px; text-align: center;">${estoqueHtml}</div>
-            <button class="st-button btn-full-width" onclick='abrirModalEdicao(${JSON.stringify(p)})'>✏️ Editar</button>
-            <button class="st-button btn-full-width" style="margin-top:5px; border-color: rgba(231,76,60,0.5); color:#e74c3c;" onclick="excluirProduto(${p.id})">🗑️ Excluir</button>
+        return `
+            <tr>
+                <td style="display:flex; align-items:center; gap:10px;">${imgHtml}<span>${p.nome}</span></td>
+                <td class="center">${estoqueTxt}</td>
+                <td class="center">R$ ${Number(p.preco_custo).toFixed(2)}</td>
+                <td class="center">R$ ${Number(p.preco_venda).toFixed(2)}</td>
+                <td class="center">${margem}%</td>
+                <td class="center">
+                    <button class="a-btn a-btn-outline a-btn-sm" onclick='abrirModalEdicao(${JSON.stringify(p)})'>✏️</button>
+                    <button class="a-btn a-btn-danger a-btn-sm" onclick="excluirProduto('${p.id}')">🗑️</button>
+                </td>
+            </tr>
         `;
-        grid.appendChild(card);
-    });
+    }).join('');
+}
+
+function renderEstoquesCriticos(produtos) {
+    const container = document.getElementById('estoquesCriticos');
+    if (!container) return;
+
+    const criticos = produtos.filter(p => !isEstoqueIlimitado(p) && Number(p.quantidade_estoque) < ESTOQUE_CRITICO_LIMITE);
+
+    if (criticos.length === 0) {
+        container.innerHTML = `
+            <div class="a-success-box" style="grid-column:1/-1;">
+                <strong>✅ Estoque Ok</strong><br>Nenhum produto abaixo do mínimo (${ESTOQUE_CRITICO_LIMITE}).
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = criticos.map(p => `
+        <div class="a-critical-card">
+            <div class="name">${p.nome}</div>
+            <div class="stock">Estoque: <strong>${p.quantidade_estoque} ${unidadeLabel(p)}</strong></div>
+            <button class="a-btn a-btn-sm" style="background:#ff9800;" onclick='abrirModalEdicao(${JSON.stringify(p)})'>Repor Estoque</button>
+        </div>
+    `).join('');
 }
 
 // Filtro Admin
-buscaInput.addEventListener('input', (e) => {
-    const t = e.target.value.toLowerCase();
-    const filtrados = adminProducts.filter(p => 
-        p.nome.toLowerCase().includes(t) || 
-        (p.codigo_barras && p.codigo_barras.toLowerCase().includes(t))
-    );
-    renderAdminTable(filtrados);
-});
+if (buscaInput) {
+    buscaInput.addEventListener('input', (e) => {
+        const t = e.target.value.toLowerCase();
+        const filtrados = adminProducts.filter(p =>
+            p.nome.toLowerCase().includes(t) ||
+            (p.codigo_barras && p.codigo_barras.toLowerCase().includes(t))
+        );
+        renderAdminTable(filtrados);
+    });
+}
 
 // Modal Actions
 document.getElementById('btnNovoProduto').addEventListener('click', () => {
@@ -119,7 +157,6 @@ formProduto.addEventListener('submit', async (e) => {
 
         let produtoSalvo;
 
-        // 1. Salvar dados no banco (Upsert ou Insert/Update)
         if (id) {
             const { data, error } = await supabase.from('produtos').update(dados).eq('id', id).select();
             if (error) throw error;
@@ -130,11 +167,10 @@ formProduto.addEventListener('submit', async (e) => {
             produtoSalvo = data[0];
         }
 
-        // 2. Upload de Foto se existir
         if (arquivoFoto && produtoSalvo) {
             const fileExt = arquivoFoto.name.split('.').pop();
             const fileName = `${produtoSalvo.id}_${Date.now()}.${fileExt}`;
-            
+
             const { error: uploadError } = await supabase.storage
                 .from('produtos')
                 .upload(fileName, arquivoFoto, { upsert: true });
@@ -159,7 +195,7 @@ formProduto.addEventListener('submit', async (e) => {
 
 // Excluir Produto
 async function excluirProduto(id) {
-    if(confirm("Tem certeza que deseja excluir este produto?")) {
+    if (confirm("Tem certeza que deseja excluir este produto?")) {
         try {
             const { error } = await supabase.from('produtos').delete().eq('id', id);
             if (error) throw error;
