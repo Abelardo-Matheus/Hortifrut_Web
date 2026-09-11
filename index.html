@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hortifruti J&M - Vitrine Virtual</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/vitrine.css">
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -11,6 +12,14 @@
 <body>
 
   <div id="app-content">
+    <!-- ===== TOPO ===== -->
+    <div class="vt-topbar">
+      <div class="vt-topbar-inner">
+        <div class="vt-logo">🥗 Hortifruti J&amp;M</div>
+        <a href="https://api.whatsapp.com/send?phone=5531987245838&text=Olá! Gostaria de falar com o Hortifruti J&M." target="_blank" class="vt-topbar-link">📱 Fale no WhatsApp</a>
+      </div>
+    </div>
+
     <!-- ===== CABEÇALHO — Vídeo logo ===== -->
     <div class="video-container">
       <video class="logo-video"
@@ -22,11 +31,11 @@
       </div>
     </div>
 
-    <main style="padding-top: 30px;">
+    <main>
 
     <!-- Div onde os produtos aparecerão dinamicamente -->
     <div id="vitrineGrid" class="vitrine-grid">
-      <p style="text-align:center; width:100%; color:#888;">Carregando produtos...</p>
+      <p class="vt-loading">Carregando produtos...</p>
     </div>
   </main>
   </div>
